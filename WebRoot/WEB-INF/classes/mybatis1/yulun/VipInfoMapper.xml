@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="VipInfoMapper">
+
+    <select id="findAlllistPage" resultType="pd" parameterType="page">
+		SELECT * FROM t_vipinfo
+		<if test="pd.tel != null and pd.tel != ''">
+			 ,(SELECT vipid FROM t_ortherlink WHERE   otel=#{pd.tel}) a where id=a.vipid
+		</if>
+		<if test="pd.tel == null or pd.tel == ''">
+			WHERE 1=1
+		</if>
+		<if test="pd.id != null and pd.id != ''">
+			and id=#{pd.id}
+		</if>
+		<if test="pd.name != null and pd.name != ''">
+			and name=#{pd.name}
+		</if>
+		<if test="pd.result != null and pd.result != ''">
+			and result=#{pd.result}
+		</if>
+		<if test="pd.keywords != null and pd.keywords != ''">
+		  	AND (name LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			result LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			idcard LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			sex LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			isimport LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			place LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			clevel LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			ctype LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%'))
+		</if>
+		order by cztime desc
+	</select>
+
+	<select id="checkvip" parameterType="pd" resultType="pd">
+		SELECT * FROM t_vipinfo where 1=1
+		<if test="id != null and id != ''">
+			and id=#{id}
+		</if>
+	</select>
+
+	<select id="findVipInfoByid" parameterType="pd" resultType="pd">
+		SELECT * FROM t_vipinfo WHERE id=#{id}
+	</select>
+
+    <insert id="insertVipInfo" parameterType="pd">
+		INSERT INTO t_vipinfo(
+		id,
+		name,
+		sex,
+		idcard,
+		recepdep,
+		clevel,
+		birthday,
+		position,
+		place,
+		waiter,
+		isimport,
+		isusecard,
+		ortherinfo,
+		ctype,
+		result,
+		favorite,
+		cztime,
+		czman
+		)VALUES (
+		#{id},
+		#{name},
+		#{sex},
+		#{idcard},
+		#{recepdep},
+		#{clevel},
+		#{birthday},
+		#{position},
+		#{place},
+		#{waiter},
+		#{isimport},
+		#{isusecard},
+		#{ortherinfo},
+		#{ctype},
+		#{result},
+		#{favorite},
+		#{cztime},
+		#{czman}
+		)
+	</insert>
+
+	<update id="updateVipInfo" parameterType="pd">
+		UPDATE t_vipinfo
+		SET
+		name=#{name},
+		sex=#{sex},
+		idcard=#{idcard},
+		recepdep=#{recepdep},
+		clevel=#{clevel},
+		place=#{place},
+		birthday=#{birthday},
+		position=#{position},
+		waiter=#{waiter},
+		result=#{result},
+		isusecard=#{isusecard},
+		ortherinfo=#{ortherinfo},
+		ctype=#{ctype},
+		favorite=#{favorite},
+		cztime=#{cztime},
+		czman=#{czman}
+		WHERE id=#{id}
+	</update>
+
+
+	<update id="updateVipresult" parameterType="pd">
+		UPDATE t_vipinfo
+		SET
+		result=#{result}
+		WHERE id=#{id}
+	</update>
+
+    <delete id="deleteVipInfo" parameterType="pd">
+		DELETE FROM t_vipinfo WHERE id=#{id}
+	</delete>
+
+	<select id="findOrtherByid" parameterType="pd" resultType="pd">
+		SELECT * from t_ortherlink WHERE id=#{id}
+	</select>
+
+	<select id="findAllByVipidlistPage" parameterType="page" resultType="pd">
+		SELECT * from t_ortherlink WHERE vipid=#{pd.vipid}
+	</select>
+
+	<insert id="insertOrther" parameterType="pd">
+		INSERT INTO t_ortherlink(
+		id,
+		oname,
+		otel,
+		vipid
+		)VALUES (
+		#{id},
+		#{oname},
+		#{otel},
+		#{vipid}
+		)
+	</insert>
+
+	<update id="updateOrther" parameterType="pd">
+		UPDATE t_ortherlink
+		SET
+		oname=#{oname},
+		otel=#{otel},
+		vipid=#{vipid}
+		WHERE id=#{id}
+	</update>
+
+	<update id="updateVipid" parameterType="pd">
+		UPDATE t_ortherlink
+		SET
+		vipid=#{vipid}
+		WHERE id=#{id}
+	</update>
+	
+	<delete id="deleteOrther" parameterType="pd">
+		DELETE FROM t_ortherlink WHERE id=#{id}
+	</delete>
+
+	<delete id="deleteOrtherAll" parameterType="pd">
+		DELETE FROM t_ortherlink WHERE vipid=#{vipid}
+	</delete>
+
+	<insert id="insertphoto" parameterType="pd">
+		INSERT t_photo
+		(
+		id,
+		url,
+		name,
+		vipid
+		)VALUES (
+		#{id},
+		#{url},
+		#{name},
+		#{vipid}
+		)
+	</insert>
+
+	<select id="getFileByid" parameterType="pd" resultType="pd">
+		SELECT * FROM t_photo WHERE id=#{id}
+	</select>
+
+	<select id="getFileByVipid" parameterType="pd" resultType="pd">
+		SELECT * FROM t_photo WHERE vipid=#{vipid}
+	</select>
+
+	<delete id="deleteFile" parameterType="pd">
+		DELETE FROM t_photo
+		WHERE id=#{id}
+	</delete>
+
+	<update id="updateFile" parameterType="pd">
+		UPDATE t_photo
+		SET
+		vipid=#{vipid}
+		WHERE id=#{id}
+	</update>
+</mapper>

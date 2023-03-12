@@ -1,0 +1,906 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ComplainMapper">
+
+	<select id="getData" parameterType="pd" resultType="pd">
+		SELECT COUNT(id) num
+		<if test='tsdept=="1"'>
+			,tsdept
+		</if>
+		<if test='tsdept!=null and tsdept!="" and tsbigtype=="1"'>
+			,tsbigtype
+		</if>
+		<if test='tsdept!=null and tsdept!="" and tstypename=="1"'>
+			,tstypename
+		</if>
+		FROM (SELECT
+		a.*,
+		b.name AS tssourcename,
+		c.name AS tslevelname,
+		d.name AS tstypename,
+		e.name AS tsclassifyname,
+		f.name AS tsdeptname,
+		g.name AS tsbigtype,
+		i.name AS cljdname
+
+		FROM
+		t_workorder a
+		LEFT JOIN SYS_DICTIONARIES b ON a.tssource=b.DICTIONARIES_ID
+		LEFT JOIN SYS_DICTIONARIES f ON a.tsdept=f.DICTIONARIES_ID
+		LEFT JOIN SYS_DICTIONARIES c ON a.tslevel=c.DICTIONARIES_ID
+		LEFT JOIN SYS_DICTIONARIES d ON a.tstype=d.DICTIONARIES_ID
+		LEFT JOIN SYS_DICTIONARIES e ON a.tsclassify=e.DICTIONARIES_ID
+		LEFT JOIN SYS_DICTIONARIES g ON d.parent_id=g.DICTIONARIES_ID
+		LEFT JOIN T_AREA i ON a.cljd=i.AREA_CODE
+		where 1=1
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		) a where 1=1
+
+		<if test="tsclassify==1">
+			and tsclassify="b86245ef65804dffa40726f16539625d"
+		</if>
+
+		<if test="tsclassify==2">
+			and tsclassify="bd2ebb65e3c844d3af6f2b334c5a19c0"
+		</if>
+
+		<if test="tsclassify==3">
+			and tsclassify="31e58b803488448ea0664b904f66ccf0"
+		</if>
+		<if test='tsdept=="1"'>
+			and istarget='1' GROUP BY tsdept ORDER BY num
+		</if>
+		<if test='tsdept!=null and tsdept!="" and tsbigtype=="1"'>
+			and FIND_IN_SET(#{tsdept},tsdept) and istarget='1' GROUP BY tsbigtype ORDER BY num DESC LIMIT 0,10
+		</if>
+		<if test='tsdept!=null and tsdept!="" and tstypename=="1"'>
+			and FIND_IN_SET(#{tsdept},tsdept) and istarget='1' GROUP BY tstypename ORDER BY num DESC LIMIT 0,10
+		</if>
+	</select>
+	<!--	投诉类-->
+	<!--	表扬类-->
+	<!--	建议类-->
+	<select id="getsmallbybig" resultType="pd" parameterType="pd">
+		SELECT
+		  *
+		FROM
+		  sys_dictionaries
+		WHERE PARENT_ID =
+				(SELECT
+				  DICTIONARIES_ID
+				FROM
+				  sys_dictionaries
+				WHERE NAME LIKE CONCAT(CONCAT('%', #{name}), '%'))
+	</select>
+	<select id="getArea" resultType="pd" parameterType="pd">
+		SELECT AREA_CODE,NAME FROM t_area where parent_id='1c60efa9749946b8b82b7322f9e65ac7' and isuse = '1'
+	</select>
+
+	<select id="getDictionaries" parameterType="pd" resultType="pd">
+		select name,bianma from sys_dictionaries where bianma like CONCAT(CONCAT(#{bianma}),'__')
+	</select>
+
+	<select id="getDictionaries2" parameterType="pd" resultType="pd">
+		select name,bianma from sys_dictionaries where bianma like CONCAT(CONCAT(#{bianma}),'__-__')
+	</select>
+
+	<select id="getgdzlmonth" resultType="pd" parameterType="pd">
+		SELECT DATE_FORMAT(tsdate,'%m') MONTH,COUNT(wo.id) num FROM t_workorder wo
+		<if test="offices!=null and offices!=''">
+			left join act_ru_office_deal deal ON wo.proc_id=deal.proc_id
+		</if>
+		WHERE 1=1 and istarget='1'
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},IFNULL(deal.office,wo.tsdept))
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},IFNULL(deal.office,wo.tsdept))
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+
+		GROUP BY MONTH
+	</select>
+
+	<select id="getgdzlday" resultType="pd" parameterType="pd">
+		SELECT DATE_FORMAT(tsdate,'%d') MONTH,COUNT(wo.id) num FROM t_workorder wo
+		<if test="offices!=null and offices!=''">
+			left join act_ru_office_deal deal ON wo.proc_id=deal.proc_id
+		</if>
+		WHERE 1=1 and istarget='1'
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},IFNULL(deal.office,wo.tsdept))
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},IFNULL(deal.office,wo.tsdept))
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		GROUP BY MONTH
+	</select>
+
+	<select id="getgdzlyear" resultType="pd" parameterType="pd">
+		SELECT DATE_FORMAT(tsdate,'%Y') MONTH,COUNT(wo.id) num FROM t_workorder wo
+		<if test="offices!=null and offices!=''">
+			left join act_ru_office_deal deal ON wo.proc_id=deal.proc_id
+		</if>
+		WHERE 1=1 and istarget='1'
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},IFNULL(deal.office,wo.tsdept))
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},IFNULL(deal.office,wo.tsdept))
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		GROUP BY MONTH
+	</select>
+
+	<!--	<select id="getcfts" resultType="pd" parameterType="pd">-->
+	<!--		SELECT COUNT(id) num FROM t_workorder WHERE cfbm!=NULL OR cfbm!='' and tsclassify="b86245ef65804dffa40726f16539625d" and istarget='1'-->
+	<!--		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">-->
+	<!--			and tsdate BETWEEN #{starttime} and #{endtime}-->
+	<!--		</if>-->
+	<!--	</select>-->
+
+	<!--	<select id="getsyw" resultType="pd" parameterType="pd">-->
+	<!--		select count(id) num from t_workorder where 1=1 and istarget='1' and tssource='333c9cc4b29a4beaa6d2ed4e40c8b296'-->
+	<!--		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">-->
+	<!--			and tsdate BETWEEN #{starttime} and #{endtime}-->
+	<!--		</if>-->
+	<!--	</select>-->
+
+	<!--	<select id="getmhzj" resultType="pd" parameterType="pd">-->
+	<!--		select count(id) num from t_workorder where 1=1 and istarget='1' and tssource='bb5269a2ca1f49ddbac0920bf2088374'-->
+	<!--		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">-->
+	<!--			and tsdate BETWEEN #{starttime} and #{endtime}-->
+	<!--		</if>-->
+	<!--	</select>-->
+
+	<!--	<select id="getrx" resultType="pd" parameterType="pd">-->
+	<!--		select count(id) num from t_workorder where 1=1 and istarget='1' and tssource='183f8c3ffd654a6aa307aa14c3fbe033'-->
+	<!--		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">-->
+	<!--			and tsdate BETWEEN #{starttime} and #{endtime}-->
+	<!--		</if>-->
+	<!--	</select>-->
+
+	<select id="getsource" parameterType="pd" resultType="pd">
+		select a.tssource,count(a.id) num,b.name
+		from t_workorder a
+		<if test="offices!=null and offices!=''">
+			left join act_ru_office_deal deal ON a.proc_id=deal.proc_id
+		</if>
+		left join sys_dictionaries b
+		on a.tssource=b.DICTIONARIES_ID
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},IFNULL(deal.office,a.tsdept))
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},IFNULL(deal.office,a.tsdept))
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		group by a.tssource
+	</select>
+
+	<select id="getzgds" resultType="pd" parameterType="pd">
+		SELECT COUNT(id) num FROM t_workorder WHERE 1=1 and tsclassify="b86245ef65804dffa40726f16539625d" and istarget='1'
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+	</select>
+
+	<select id="getkscl" parameterType="pd" resultType="pd">
+		SELECT COUNT(id) num,tsdept FROM t_workorder WHERE 1=1 and type=4 and endreason is not null  and proc_id is null and istarget='1'
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		group by tsdept order by num desc
+	</select>
+
+	<select id="getkscltsman" parameterType="pd" resultType="pd">
+		select group_concat(num) `data`,group_concat(tsman) `name` from (
+		SELECT COUNT(id) num,tsman FROM t_workorder WHERE 1=1 and type=4 and endreason is not null  and proc_id is null and istarget='1'
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by tsman order by num desc limit 10
+		) a
+
+	</select>
+
+	<select id="getkscltsclassify" parameterType="pd" resultType="pd">
+		select group_concat(value) `value`,group_concat(name) `name` from (
+		select dict.name,ifnull(a.value,0) `value` from sys_dictionaries dict left join (
+		select dic.name,COUNT(wo.id) value
+		from sys_dictionaries dic
+		left join t_workorder wo
+		on dic.DICTIONARIES_ID=wo.tstype
+		where 1=1 AND TYPE=4 AND endreason IS NOT NULL AND proc_id IS NULL AND istarget='1' and dic.BIANMA like '014-__-%'
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		GROUP BY dic.name ORDER BY value DESC
+		) a on dict.name=a.name where dict.BIANMA like '014-__-%' order by value desc limit 10
+		) b
+	</select>
+
+
+
+	<select id="getpjsx" resultType="pd" parameterType="pd">
+		SELECT DURATION_ AS pjsj,ASSIGNEE_ as tsdept,proc_inst_id_
+		FROM act_hi_taskinst a,t_workorder b
+		WHERE proc_id=proc_inst_id_
+		AND (task_def_key_ ='dbmcl' OR task_def_key_ ='muldept')
+		AND END_TIME_ IS NOT NULL and istarget='1'
+
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and START_TIME_ BETWEEN #{starttime} and #{endtime}
+		</if>
+
+	</select>
+
+	<select id="getpjsxoffice" resultType="pd" parameterType="pd">
+		SELECT DURATION_ AS pjsj,
+		IFNULL(office,tsdept) AS tsdept,
+		proc_inst_id_
+		FROM (
+		SELECT *
+		FROM act_hi_taskinst a,
+		(SELECT wo.*,deal.office,off.czdate AS sendtime,deal.czdate AS dealtime FROM t_workorder wo
+		LEFT JOIN act_ru_office off ON wo.proc_id=off.proc_id
+		LEFT JOIN act_ru_office_deal deal ON wo.proc_id=deal.proc_id) b
+		WHERE b.proc_id=a.proc_inst_id_
+		AND (task_def_key_ ='dbmcl' OR task_def_key_ ='muldept')
+		AND END_TIME_ IS NOT NULL AND istarget='1'
+		) act where 1=1
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and START_TIME_ BETWEEN #{starttime} and #{endtime}
+		</if>
+	</select>
+
+	<select id="getcsgd" resultType="pd" parameterType="pd">
+		SELECT DURATION_ AS pjsj,ASSIGNEE_ as tsdept,clsx
+		FROM act_hi_taskinst a,t_workorder b
+		WHERE proc_id=proc_inst_id_
+		AND (task_def_key_ ='dbmcl' OR task_def_key_ ='muldept')
+		AND END_TIME_ IS NOT NULL and istarget='1'
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and START_TIME_ BETWEEN #{starttime} and #{endtime}
+		</if>
+	</select>
+
+	<select id="getcsgdoffice" resultType="pd" parameterType="pd">
+		SELECT DURATION_ AS pjsj,
+		IFNULL(office,tsdept) AS tsdept,
+		clsx
+		FROM (
+		SELECT *
+		FROM act_hi_taskinst a,
+		(SELECT wo.*,deal.office,off.czdate AS sendtime,deal.czdate AS dealtime FROM t_workorder wo
+		LEFT JOIN act_ru_office off ON wo.proc_id=off.proc_id
+		LEFT JOIN act_ru_office_deal deal ON wo.proc_id=deal.proc_id) b
+		WHERE b.proc_id=a.proc_inst_id_
+		AND (task_def_key_ ='dbmcl' OR task_def_key_ ='muldept')
+		AND END_TIME_ IS NOT NULL AND istarget='1'
+		) act where 1=1
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and START_TIME_ BETWEEN #{starttime} and #{endtime}
+		</if>
+	</select>
+
+	<select id="getmaxclsj" resultType="pd" parameterType="pd">
+		SELECT DURATION_ AS pjsj,ASSIGNEE_ as tsdept,proc_inst_id_
+		FROM act_hi_taskinst a,t_workorder b
+		WHERE proc_id=proc_inst_id_
+		AND (task_def_key_ ='dbmcl' OR task_def_key_ ='muldept')
+		AND END_TIME_ IS NOT NULL and istarget='1'
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and START_TIME_ BETWEEN #{starttime} and #{endtime}
+		</if>
+
+	</select>
+
+	<select id="getmaxclsjoffice" resultType="pd" parameterType="pd">
+		SELECT DURATION_ AS pjsj,
+		IFNULL(office,tsdept) AS tsdept,
+		proc_inst_id_
+		FROM (
+		SELECT *
+		FROM act_hi_taskinst a,
+		(SELECT wo.*,deal.office,off.czdate AS sendtime,deal.czdate AS dealtime FROM t_workorder wo
+		LEFT JOIN act_ru_office off ON wo.proc_id=off.proc_id
+		LEFT JOIN act_ru_office_deal deal ON wo.proc_id=deal.proc_id) b
+		WHERE b.proc_id=a.proc_inst_id_
+		AND (task_def_key_ ='dbmcl' OR task_def_key_ ='muldept')
+		AND END_TIME_ IS NOT NULL AND istarget='1'
+		) act where 1=1
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and START_TIME_ BETWEEN #{starttime} and #{endtime}
+		</if>
+
+	</select>
+
+	<select id="getminclsj" resultType="pd" parameterType="pd">
+		SELECT DURATION_ AS pjsj,ASSIGNEE_ as tsdept,proc_inst_id_
+		FROM act_hi_taskinst a,t_workorder b
+		WHERE proc_id=proc_inst_id_
+		AND (task_def_key_ ='dbmcl' OR task_def_key_ ='muldept')
+		AND END_TIME_ IS NOT NULL and istarget='1'
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and START_TIME_ BETWEEN #{starttime} and #{endtime}
+		</if>
+	</select>
+
+	<select id="getminclsjoffice" resultType="pd" parameterType="pd">
+		SELECT DURATION_ AS pjsj,
+		IFNULL(office,tsdept) AS tsdept,
+		proc_inst_id_
+		FROM (
+		SELECT *
+		FROM act_hi_taskinst a,
+		(SELECT wo.*,deal.office,off.czdate AS sendtime,deal.czdate AS dealtime FROM t_workorder wo
+		LEFT JOIN act_ru_office off ON wo.proc_id=off.proc_id
+		LEFT JOIN act_ru_office_deal deal ON wo.proc_id=deal.proc_id) b
+		WHERE b.proc_id=a.proc_inst_id_
+		AND (task_def_key_ ='dbmcl' OR task_def_key_ ='muldept')
+		AND END_TIME_ IS NOT NULL AND istarget='1'
+		) act where 1=1
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and START_TIME_ BETWEEN #{starttime} and #{endtime}
+		</if>
+	</select>
+
+
+	<select id="getzcll" resultType="pd" parameterType="pd">
+		SELECT count(wo.id) num
+		<if test="offices==null or offices==''">
+			,tsdept
+		</if>
+		<if test="offices!=null and offices!=''">
+			,IFNULL(deal.office,wo.tsdept) as tsdept
+		</if>
+		FROM t_workorder wo
+		<if test="offices!=null and offices!=''">
+			left join act_ru_office_deal deal ON wo.proc_id=deal.proc_id
+		</if>
+		where 1=1 and istarget='1'
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},IFNULL(deal.office,wo.tsdept))
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},IFNULL(deal.office,wo.tsdept))
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		<if test="offices==null or offices==''">
+			GROUP BY tsdept
+		</if>
+		<if test="offices!=null and offices!=''">
+			GROUP BY IFNULL(deal.office,wo.tsdept)
+		</if>
+	</select>
+	<!-- SELECT count(id) num,tsdept FROM t_workorder where 1=1 AND endtime IS NULL or tsdate IS NULL and istarget='1'-->
+	<select id="getdcll" resultType="pd" parameterType="pd">
+		SELECT count(wo.id) num
+		<if test="offices==null or offices==''">
+			,tsdept
+		</if>
+		<if test="offices!=null and offices!=''">
+			,IFNULL(deal.office,wo.tsdept) as tsdept
+		</if>
+		FROM t_workorder wo
+		<if test="offices!=null and offices!=''">
+			left join act_ru_office_deal deal ON wo.proc_id=deal.proc_id
+		</if>
+		where 1=1 AND (endtime IS NULL or tsdate IS NULL) and istarget='1'
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},IFNULL(deal.office,wo.tsdept))
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},IFNULL(deal.office,wo.tsdept))
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		<if test="offices==null or offices==''">
+			GROUP BY tsdept
+		</if>
+		<if test="offices!=null and offices!=''">
+			GROUP BY IFNULL(deal.office,wo.tsdept)
+		</if>
+	</select>
+
+
+
+	<select id="getcftsmonth" resultType="pd" parameterType="pd">
+		SELECT COUNT(id) num,DATE_FORMAT(tsdate,'%m') MONTH FROM t_workorder WHERE cfbm!=NULL OR cfbm!='' and tsclassify="b86245ef65804dffa40726f16539625d" and istarget='1'
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+
+	<select id="getcftsday" resultType="pd" parameterType="pd">
+		SELECT COUNT(id) num,DATE_FORMAT(tsdate,'%d') MONTH FROM t_workorder WHERE cfbm!=NULL OR cfbm!='' and tsclassify="b86245ef65804dffa40726f16539625d"  and istarget='1'
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+
+	<select id="getcftsyear" resultType="pd" parameterType="pd">
+		SELECT COUNT(id) num,DATE_FORMAT(tsdate,'%Y') MONTH FROM t_workorder WHERE cfbm!=NULL OR cfbm!='' and tsclassify="b86245ef65804dffa40726f16539625d"  and istarget='1'
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+
+
+	<!--来源统计开始-->
+	<select id="getsywyear" parameterType="pd" resultType="pd">
+		select count(id) num,DATE_FORMAT(tsdate,'%Y') MONTH from t_workorder where 1=1 and istarget='1' and tssource='333c9cc4b29a4beaa6d2ed4e40c8b296'
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+	<select id="getsywday" parameterType="pd" resultType="pd">
+		select count(id) num,DATE_FORMAT(tsdate,'%d') MONTH from t_workorder where 1=1 and istarget='1' and tssource='333c9cc4b29a4beaa6d2ed4e40c8b296'
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+	<select id="getsywmonth" parameterType="pd" resultType="pd">
+		select count(id) num,DATE_FORMAT(tsdate,'%m') MONTH from t_workorder where 1=1 and istarget='1' and tssource='333c9cc4b29a4beaa6d2ed4e40c8b296'
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+	<select id="getmhzjyear" parameterType="pd" resultType="pd">
+		select count(id) num,DATE_FORMAT(tsdate,'%Y') MONTH from t_workorder where 1=1 and istarget='1' and tssource='bb5269a2ca1f49ddbac0920bf2088374'
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+	<select id="getmhzjday" parameterType="pd" resultType="pd">
+		select count(id) num,DATE_FORMAT(tsdate,'%d') MONTH from t_workorder where 1=1 and istarget='1' and tssource='bb5269a2ca1f49ddbac0920bf2088374'
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+	<select id="getmhzjmonth" parameterType="pd" resultType="pd">
+		select count(id) num,DATE_FORMAT(tsdate,'%m') MONTH from t_workorder where 1=1 and istarget='1' and tssource='bb5269a2ca1f49ddbac0920bf2088374'
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+	<select id="getrxyear" parameterType="pd" resultType="pd">
+		select count(id) num,DATE_FORMAT(tsdate,'%Y') MONTH from t_workorder where 1=1 and istarget='1' and tssource='183f8c3ffd654a6aa307aa14c3fbe033'
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+	<select id="getrxday" parameterType="pd" resultType="pd">
+		select count(id) num,DATE_FORMAT(tsdate,'%d') MONTH from t_workorder where 1=1 and istarget='1' and tssource='183f8c3ffd654a6aa307aa14c3fbe033'
+
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+	<select id="getrxmonth" parameterType="pd" resultType="pd">
+		select count(id) num,DATE_FORMAT(tsdate,'%m') MONTH from t_workorder where 1=1 and istarget='1' and tssource='183f8c3ffd654a6aa307aa14c3fbe033'
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+	<!--来源统计结束-->
+	<!--	快速处理-->
+	<select id="getksclmonth" parameterType="pd" resultType="pd">
+		SELECT COUNT(id) num,DATE_FORMAT(tsdate,'%m') MONTH  FROM t_workorder WHERE 1=1 and type=4 and endreason is not null  and proc_id is null and istarget='1'
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+	<select id="getksclday" parameterType="pd" resultType="pd">
+		SELECT COUNT(id) num,DATE_FORMAT(tsdate,'%d') MONTH  FROM t_workorder WHERE 1=1 and type=4 and endreason is not null  and proc_id is null and istarget='1'
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+
+	<select id="getksclyear" parameterType="pd" resultType="pd">
+		SELECT COUNT(id) num,DATE_FORMAT(tsdate,'%Y') MONTH  FROM t_workorder WHERE 1=1 and type=4 and endreason is not null  and proc_id is null and istarget='1'
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},tsdept)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},tsdept)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		group by MONTH
+	</select>
+
+
+	<!--	按科室查询-->
+	<select id="getOfficeData" parameterType="pd" resultType="pd">
+		SELECT COUNT(id) num
+		<if test='tsdept=="1"'>
+			,office
+		</if>
+		<if test='tsdept!=null and tsdept!="" and tsbigtype=="1"'>
+			,tsbigtype
+		</if>
+		<if test='tsdept!=null and tsdept!="" and tstypename=="1"'>
+			,tstypename
+		</if>
+		FROM (SELECT
+		a.*,IFNULL(deal.office,a.tsdept) office,
+		b.name AS tssourcename,
+		c.name AS tslevelname,
+		d.name AS tstypename,
+		e.name AS tsclassifyname,
+		f.name AS tsdeptname,
+		g.name AS tsbigtype,
+		i.name AS cljdname
+
+		FROM
+		t_workorder a LEFT JOIN act_ru_office_deal deal ON a.proc_id=deal.proc_id
+		LEFT JOIN SYS_DICTIONARIES b ON a.tssource=b.DICTIONARIES_ID
+		LEFT JOIN SYS_DICTIONARIES f ON a.tsdept=f.DICTIONARIES_ID
+		LEFT JOIN SYS_DICTIONARIES c ON a.tslevel=c.DICTIONARIES_ID
+		LEFT JOIN SYS_DICTIONARIES d ON a.tstype=d.DICTIONARIES_ID
+		LEFT JOIN SYS_DICTIONARIES e ON a.tsclassify=e.DICTIONARIES_ID
+		LEFT JOIN SYS_DICTIONARIES g ON d.parent_id=g.DICTIONARIES_ID
+		LEFT JOIN T_AREA i ON a.cljd=i.AREA_CODE
+		where 1=1 and istarget='1'
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and tsdate BETWEEN #{starttime} and #{endtime}
+		</if>
+		<if test="offices != null and offices != ''">
+			<if test="offices.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="offices.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},IFNULL(deal.office,a.tsdept))
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},IFNULL(deal.office,a.tsdept))
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+
+		) a where 1=1
+
+		<if test="tsclassify==1">
+			and tsclassify="b86245ef65804dffa40726f16539625d"
+		</if>
+
+		<if test="tsclassify==2">
+			and tsclassify="bd2ebb65e3c844d3af6f2b334c5a19c0"
+		</if>
+
+		<if test="tsclassify==3">
+			and tsclassify="31e58b803488448ea0664b904f66ccf0"
+		</if>
+		<if test='tsdept=="1"'>
+			GROUP BY office ORDER BY num
+		</if>
+		<if test='tsdept!=null and tsdept!="" and tsbigtype=="1"'>
+			and FIND_IN_SET(#{tsdept},office)  GROUP BY tsbigtype ORDER BY num DESC LIMIT 0,10
+		</if>
+		<if test='tsdept!=null and tsdept!="" and tstypename=="1"'>
+			and FIND_IN_SET(#{tsdept},office)  GROUP BY tstypename ORDER BY num DESC LIMIT 0,10
+		</if>
+	</select>
+
+	<select id="getAreaByName" parameterType="pd" resultType="pd">
+		select
+		AREA_CODE,
+		AREA_LEVEL,
+		AREA_ID,
+		PARENT_ID,
+		NAME,
+		linkman,
+		linktel,
+		address,
+		wxid,
+		isuse
+		from
+		T_AREA
+		where 1=1
+		<if test="NAME!= null and NAME!= ''"><!-- 检索 -->
+			and NAME = #{NAME}
+		</if>
+	</select>
+
+
+</mapper>

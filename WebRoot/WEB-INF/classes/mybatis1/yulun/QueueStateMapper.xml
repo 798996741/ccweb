@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="QueueState">
+	<select id="getQueueState" parameterType="page" resultType="pd">
+
+
+		SELECT a.*,IFNULL(TRUNCATE(a.AnswerCount/a.TodayCall*100,0),0)
+		AnswerRate FROM (
+			(
+				SELECT (
+				<!-- 当前排队 -->
+				SELECT COUNT(*) NowLine
+				FROM t_queuedlist
+				WHERE DATE(DATETIME)=CURDATE()
+				AND state=1
+				AND deviceid=#{zbh}
+				) NowLine,(
+				<!-- #今日来电 -->
+				SELECT COUNT(*) TodayCall
+				FROM thwrz a
+				INNER JOIN tthjl b
+				ON a.hwlsh=b.hwlsh
+				INNER JOIN tzxlb c
+				ON b.zxid=c.zxid
+				WHERE DATE(a.kssj)=CURDATE()
+				AND a.sfzrg=1
+				AND c.zxz=(SELECT id FROM tzxz WHERE zbh=#{zbh})
+				) TodayCall,(
+				<!-- 接听总量 -->
+				SELECT COUNT(*) AnswerCount
+				FROM tthjl_zxjtls a
+				INNER JOIN tthjl b
+				ON a.thjl_id=b.id
+				INNER JOIN tzxlb c
+				ON b.zxid=c.zxid
+				WHERE DATE(a.kssj)=CURDATE()
+				AND a.thjl_id <![CDATA[ <> ]]> 0
+				AND b.hwlsh <![CDATA[ <> ]]> 0
+				AND a.thfx=0
+				AND c.zxz=(SELECT id FROM tzxz WHERE zbh=#{zbh})
+				) AnswerCount,(
+				<!-- 登录坐席 -->
+				SELECT COUNT(*) LoginAgent
+				FROM t_agentstate a
+				INNER JOIN tzxlb b
+				ON a.agentid=b.zxid
+				WHERE a.state>0
+				AND b.zxz=(SELECT id FROM tzxz WHERE zbh=#{zbh})
+				)
+				LoginAgent,(
+				<!-- #闲坐席 -->
+				SELECT COUNT(*) IdleAgent
+				FROM t_agentstate a
+				INNER JOIN tzxlb b
+				ON a.agentid=b.zxid
+				WHERE a.state=1
+				AND b.zxz=(SELECT id FROM tzxz WHERE zbh=#{zbh})
+				)
+				IdleAgent,(
+				<!-- 示忙坐席 -->
+				SELECT COUNT(*) BusyAgent
+				FROM t_agentstate a
+				INNER JOIN tzxlb b
+				ON a.agentid=b.zxid
+				WHERE a.state=2
+				AND b.zxz=(SELECT id FROM tzxz WHERE zbh=#{zbh})
+				)
+				BusyAgent,(
+				<!-- 工作坐席 -->
+				SELECT COUNT(*) WorkAgent
+				FROM t_agentstate a
+				INNER JOIN tzxlb b
+				ON a.agentid=b.zxid
+				WHERE a.state>2
+				AND b.zxz=(SELECT id FROM tzxz WHERE zbh=#{zbh})
+				)
+				WorkAgent
+			) a
+		)
+	</select>
+
+	<select id="getCountByHour"  parameterType="page" resultType="pd">
+		SELECT (
+		<!-- 接听总量 -->
+		SELECT COUNT(*) AnswerCount
+		FROM tthjl_zxjtls a
+		INNER JOIN tthjl b
+		ON a.thjl_id=b.id
+		INNER JOIN tzxlb c
+		ON b.zxid=c.zxid
+		WHERE DATE(a.kssj)=CURDATE()
+		AND EXTRACT(HOUR FROM a.kssj)=#{hour}
+		AND a.thjl_id <![CDATA[ <> ]]> 0
+		AND b.hwlsh <![CDATA[ <> ]]> 0
+		AND a.thfx=0
+		AND c.zxz=(SELECT id FROM tzxz WHERE zbh=#{zbh})
+		) AnswerCount,(
+		<!--来电量-->
+		SELECT COUNT(*) TodayCall
+		FROM thwrz a
+		INNER JOIN tthjl b
+		ON a.hwlsh=b.hwlsh
+		INNER JOIN tzxlb c
+		ON b.zxid=c.zxid
+		WHERE DATE(a.kssj)=CURDATE()
+		AND EXTRACT(HOUR FROM a.kssj)=#{hour}
+		AND a.sfzrg=1
+		AND c.zxz=(SELECT id FROM tzxz WHERE zbh=#{zbh})
+		) CallCount
+	</select>
+</mapper>

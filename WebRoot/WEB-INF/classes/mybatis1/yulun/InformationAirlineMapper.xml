@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="InformationAirlineMapper">
+    <select id="datalistPage" parameterType="page" resultType="pd">
+
+        SELECT m.aodb_id,m.FlightIdentity,m.FlightScheduledDate,m.startAirportName,m.ScheduledTakeOffDateTime,
+        m.ActualTakeOffDateTime,m.AircraftTerminalID,m.GateID,m.CheckInDeskID,n.endAirportName,
+        n.ScheduledLandingDateTime,n.ActualLandingDateTime,n.AircraftTerminalID_END,n.BaggageReclaimID,
+        m.FlightCountryType,n.FlightCountryType_END FROM
+        (SELECT a.aodb_id,a.FlightIdentity,a.FlightScheduledDate,(
+            SELECT AirportChineseFullName FROM `t_bss_airport` tba WHERE e.`IATAOriginAirport`=tba.AirportIATACode
+        ) AS startAirportName,b.ScheduledTakeOffDateTime,b.ActualTakeOffDateTime,c.AircraftTerminalID
+        ,c.GateID,c.CheckInDeskID,e.FlightCountryType FROM `t_fss_primarykey` a
+        LEFT JOIN `t_fss_flightdata_gerneral` e ON a.`aodb_id`=e.`aodb_id`
+        LEFT JOIN `t_fss_flightdata_operationaldatetime` b ON a.`aodb_id`=b.`aodb_id`
+        LEFT JOIN `t_fss_flightdata_airport` c ON a.`aodb_id`=c.`aodb_id`
+        WHERE a.FlightDirection='D'
+        <if test="pd.FlightCountryType!=null and pd.FlightCountryType!=''">
+            AND e.FlightCountryType=#{pd.FlightCountryType}
+        </if>
+        ORDER BY a.CreateDate DESC) m
+        INNER JOIN
+        (SELECT a.FlightIdentity,a.FlightScheduledDate,(
+            SELECT AirportChineseFullName FROM `t_bss_airport` tbb WHERE e.`IATADestinationAirport`=tbb.AirportIATACode
+        ) AS endAirportName,b.ScheduledLandingDateTime,b.ActualLandingDateTime,c.AircraftTerminalID AS AircraftTerminalID_END
+        ,c.BaggageReclaimID,e.FlightCountryType AS FlightCountryType_END FROM `t_fss_primarykey` a
+        LEFT JOIN `t_fss_flightdata_gerneral`e ON a.`aodb_id`=e.`aodb_id`
+        LEFT JOIN `t_fss_flightdata_operationaldatetime` b ON a.`aodb_id`=b.`aodb_id`
+        LEFT JOIN `t_fss_flightdata_airport` c ON a.`aodb_id`=c.`aodb_id`
+        WHERE a.FlightDirection='A'
+        <if test="pd.FlightCountryType!=null and pd.FlightCountryType!=''">
+            AND e.FlightCountryType=#{pd.FlightCountryType}
+        </if>
+        ORDER BY a.CreateDate DESC) n
+        ON m.FlightScheduledDate=n.FlightScheduledDate AND m.FlightIdentity=n.FlightIdentity
+        where 1=1
+        <if test="pd.FlightScheduledDate!=null and pd.FlightScheduledDate!=''">
+            m.FlightScheduledDate=#{pd.FlightScheduledDate}
+        </if>
+        <if test="pd.FlightIdentity!=null and pd.FlightIdentity!=''">
+            m.FlightIdentity=#{pd.FlightIdentity}
+        </if>
+        <if test="pd.startAirportName!=null and pd.startAirportName!=''">
+            m.startAirportName=#{pd.FlightIdentity}
+        </if>
+        <if test="pd.endAirportName!=null and pd.endAirportName!=''">
+            n.endAirportName=#{pd.endAirportName}
+        </if>
+
+    </select>
+
+
+
+    <select id="cacheDatalistPage" parameterType="page" resultType="pd">
+        select id,IFNULL(`FlightIdentity`,'') as FlightIdentity,
+        IFNULL(`FlightScheduledDate`,'') as FlightScheduledDate,
+        IFNULL(`startAirportName`,'') as startAirportName,
+        IFNULL(`ScheduledTakeOffDateTime`,'') as ScheduledTakeOffDateTime,
+        IFNULL(`ActualTakeOffDateTime`,'') as ActualTakeOffDateTime,
+        IFNULL(`AircraftTerminalID`,'') as AircraftTerminalID,
+        IFNULL(`GateID`,'') as GateID,
+        IFNULL(`CheckInDeskID`,'') as CheckInDeskID,
+        IFNULL(`endAirportName`,'') as endAirportName,
+        IFNULL(`startAirportEnglishName`,'') as startAirportEnglishName,
+        IFNULL(`endAirportEnglishName`,'') as endAirportEnglishName,
+        IFNULL(`ScheduledLandingDateTime`,'') as ScheduledLandingDateTime,
+        IFNULL(`ActualLandingDateTime`,'') as ActualLandingDateTime,
+        IFNULL(`AircraftTerminalID_END`,'') as AircraftTerminalID_END,
+        IFNULL(`BaggageReclaimID`,'') as BaggageReclaimID,
+        IFNULL(`FlightCountryType`,'') as FlightCountryType,
+        IFNULL(`CreateDate`,'') as CreateDate
+        from aodb.information_airline_cache
+        where 1=1
+        <if test="pd.FlightScheduledDate!=null and pd.FlightScheduledDate!=''"><!-- 时间检索 -->
+            and FlightScheduledDate= #{pd.FlightScheduledDate}
+        </if>
+
+        <if test="pd.FlightIdentity!=null and pd.FlightIdentity!=''"><!-- 航班号 -->
+            and FlightIdentity= #{pd.FlightIdentity}
+        </if>
+
+        <if test="pd.startAirportName!=null and pd.startAirportName!=''">
+            and startAirportName=#{pd.FlightIdentity}
+        </if>
+
+        <if test="pd.endAirportName!=null and pd.endAirportName!=''">
+            and endAirportName=#{pd.endAirportName}
+        </if>
+
+        <if test="pd.FlightCountryType!=null and pd.FlightCountryType!=''">
+            and FlightCountryType=#{pd.FlightCountryType}
+        </if>
+        order by FlightScheduledDate desc
+    </select>
+
+    <select id="findById" parameterType="pd" resultType="pd">
+        select id,IFNULL(`FlightIdentity`,'') as FlightIdentity,
+        IFNULL(`FlightScheduledDate`,'') as FlightScheduledDate,
+        IFNULL(`ScheduledTakeOffDateTime`,'') as ScheduledTakeOffDateTime,
+        IFNULL(`ActualTakeOffDateTime`,'') as ActualTakeOffDateTime,
+        IFNULL(`AircraftTerminalID`,'') as AircraftTerminalID,
+        IFNULL(`GateID`,'') as GateID,
+        IFNULL(`CheckInDeskID`,'') as CheckInDeskID,
+        IFNULL(`startAirportName`,'') as startAirportName,
+        IFNULL(`endAirportName`,'') as endAirportName,
+        IFNULL(`startAirportEnglishName`,'') as startAirportEnglishName,
+        IFNULL(`endAirportEnglishName`,'') as endAirportEnglishName,
+        IFNULL(`ScheduledLandingDateTime`,'') as ScheduledLandingDateTime,
+        IFNULL(`ActualLandingDateTime`,'') as ActualLandingDateTime,
+        IFNULL(`AircraftTerminalID_END`,'') as AircraftTerminalID_END,
+        IFNULL(`BaggageReclaimID`,'') as BaggageReclaimID,
+        IFNULL(`FlightCountryType`,'') as FlightCountryType,
+        IFNULL(`CreateDate`,'') as CreateDate
+        from aodb.information_airline_cache
+        where id=#{id}
+        <if test="FlightScheduledDate!=null and FlightScheduledDate!=''"><!-- 时间检索 -->
+            and FlightScheduledDate= #{FlightScheduledDate}
+        </if>
+
+        <if test="FlightIdentity!=null and FlightIdentity!=''"><!-- 航班号 -->
+            and FlightIdentity= #{FlightIdentity}
+        </if>
+
+        <if test="startAirportName!=null and startAirportName!=''">
+            and  startAirportName=#{FlightIdentity}
+        </if>
+
+        <if test="endAirportName!=null and endAirportName!=''">
+            and endAirportName=#{endAirportName}
+        </if>
+
+        <if test="FlightCountryType!=null and FlightCountryType!=''">
+            and FlightCountryType=#{FlightCountryType}
+        </if>
+
+    </select>
+</mapper>

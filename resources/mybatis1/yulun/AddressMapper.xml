@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AddressMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		t_addresslist
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		name,
+		type,
+		tel1,
+		tel2,
+		departmentid,
+		czman,
+		czdate,
+		ip,
+		issh,
+		remark,
+		addressno
+
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{name},
+		#{type},
+		#{tel1},
+		#{tel2},
+		#{departmentid},
+		#{czman},
+		now(),
+		#{ip},
+		#{issh},
+		#{remark},
+		#{addressno}
+		
+	</sql>
+	
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	
+	<!-- 批量删除 -->
+	<update id="deleteAll" parameterType="String">
+		update
+			<include refid="tableName"></include>
+		set 
+  			isdel=#{isdel},
+  			type=#{type},
+  			remark=#{remark}
+		where 
+			find_in_set(id,#{id})
+	</update>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+			<include refid="tableName"></include>
+		set 
+  			name=#{name},
+			type=#{type},
+			tel1=#{tel1},
+			tel2=#{tel2},
+			issh=#{issh},
+			departmentid=#{departmentid},
+			czman=#{czman},
+			czdate=now(),
+			ip=#{ip},
+			remark=#{remark}
+		where 
+		id = #{id}
+	</update>
+	
+	
+	<!-- 修改 -->
+	<update id="sh" parameterType="String">
+		update
+			<include refid="tableName"></include>
+		set 
+  			issh=#{issh},
+			shman=#{shman},
+			type=#{type},
+			shremark=#{shremark},
+			shdate=now()  
+		where 
+		find_in_set(id,#{id})
+	</update>
+	
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select 
+			a.id,
+			a.name,
+			a.type,
+			a.tel1,
+			a.tel2,
+			a.departmentid,
+			a.czman,
+			a.shman,
+			a.shremark,
+			a.ip,
+			a.issh,
+			a.remark,
+			a.addressno,
+			DATE_FORMAT(a.shdate,"%Y-%m-%d %T") as shdate,
+			DATE_FORMAT(a.czdate,"%Y-%m-%d %T") as czdate,
+		
+			b.name as departmentname,
+			c.zxxm as czname,
+			d.zxxm as shname
+		 from 
+		<include refid="tableName"></include> a 
+		left join t_area b on a.departmentid=b.AREA_CODE
+		left join tzxlb c on a.czman=c.id
+		left join tzxlb d on a.shman=d.id
+		where 1=1
+		
+		<if test="pd.tel!= null and pd.tel != ''"><!-- 关键词检索 -->
+			and
+				(
+					a.tel1 LIKE CONCAT(CONCAT('%', #{pd.tel}),'%')
+					 or
+					a.tel2 LIKE CONCAT(CONCAT('%', #{pd.tel}),'%')
+				)
+		</if>
+		<if test="pd.starttime!=null and pd.starttime!=''"><!-- 开始时间检索 -->
+			and a.czdate &gt;= #{pd.starttime} 
+		</if>
+		<if test="pd.endtime!=null and pd.endtime!=''"><!-- 结束时间检索 -->
+			and a.czdate &lt;= #{pd.endtime} 
+		</if>
+		<if test="pd.name!= null and pd.name!= ''">
+			and a.name LIKE CONCAT(CONCAT('%', #{pd.name}),'%')
+		</if>
+		<if test="pd.remark!= null and pd.remark!= ''">
+			and a.remark LIKE CONCAT(CONCAT('%', #{pd.remark}),'%')
+		</if>
+		<if test="pd.departmentid!= null and pd.departmentid!= ''">
+			and a.departmentid=#{pd.departmentid}
+		</if>
+		<if test="pd.issh!= null and pd.issh!= ''">
+			and a.issh=#{pd.issh}
+		</if>
+		<if test="pd.zxid!= null and pd.zxid!= ''">
+			and c.zxid=#{pd.zxid}
+		</if>
+		<if test="pd.dept!= null and pd.dept!= ''">
+			and c.dept=#{pd.dept}
+		</if>
+		<if test="pd.isdel!= null and pd.isdel!= ''">
+			and a.isdel=#{pd.isdel}
+		</if>
+		
+		order by a.czdate desc	
+	</select>
+	
+	
+	<select id="listByids" parameterType="pd" resultType="pd">
+		select 
+			a.id,
+			a.name,
+			a.type,
+			a.tel1,
+			a.tel2,
+			a.departmentid,
+			a.czman,
+			a.shman,
+			a.shremark,
+			a.ip,
+			a.issh,
+			a.remark,
+			a.addressno,
+			DATE_FORMAT(a.shdate,"%Y-%m-%d %T") as shdate,
+			DATE_FORMAT(a.czdate,"%Y-%m-%d %T") as czdate,
+		
+			b.name as departmentname,
+			c.zxxm as czname,
+			d.zxxm as shname
+		 from 
+		<include refid="tableName"></include> a 
+		left join t_area b on a.departmentid=b.AREA_CODE
+		left join tzxlb c on a.czman=c.id
+		left join tzxlb d on a.shman=d.id
+		where 1=1
+		<if test="ids!= null and ids != ''">
+			and find_in_set(a.id,#{ids})
+		</if>
+	</select>
+	
+	<!-- 通过id获取数据 -->
+	<select id="findByid" parameterType="pd" resultType="pd">
+		select 
+			a.id,
+			a.name,
+			a.type,
+			a.tel1,
+			a.tel2,
+			a.departmentid,
+			a.czman,
+			a.shman,
+			a.shremark,
+			a.ip,
+			a.issh,
+			a.remark,
+			a.addressno,
+			DATE_FORMAT(a.shdate,"%Y-%m-%d %T") as shdate,
+			DATE_FORMAT(a.czdate,"%Y-%m-%d %T") as czdate,
+		
+			b.name as departmentname,
+			c.zxxm as czname,
+			d.zxxm as shname
+		 from 
+		<include refid="tableName"></include> a 
+		left join t_area b on a.departmentid=b.AREA_CODE
+		left join tzxlb c on a.czman=c.id
+		left join tzxlb d on a.shman=d.id
+			where a.id = #{id}
+	</select>
+	
+	<select id="getMaxAddressno" parameterType="pd" resultType="pd">
+		select max(addressno) as maxaddressno from t_addresslist WHERE addressno LIKE CONCAT(CONCAT(#{keywords}),'%')
+	</select>
+	
+	<!-- 351412933 -->
+</mapper>

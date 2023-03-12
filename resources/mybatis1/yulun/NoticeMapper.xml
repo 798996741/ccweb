@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="NoticeMapper">
+
+    <select id="findAlllistPage" parameterType="page" resultType="pd">
+		SELECT * FROM T_NOTICE where 1=1
+		<if test="pd.userids != null and pd.userids != ''">
+			<if test="pd.userids.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="pd.userids.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},userid)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},userid)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="pd.setname!=null and pd.setname!=''" >
+			and setname=#{pd.setname}
+		</if>
+
+		<if test="pd.keywords!=null and pd.keywords!=''" >
+			AND (
+			title LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			starttime LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			endtime LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			content LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			setname LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			username LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			)
+		</if>
+		order by starttime desc
+	</select>
+
+    <insert id="insertNotice" parameterType="pd">
+		INSERT INTO T_NOTICE(
+		id,
+		title,
+		starttime,
+		endtime,
+		content,
+		userid,
+		username,
+		setname
+		)VALUES (
+		#{id},
+		#{title},
+		#{starttime},
+		#{endtime},
+		#{content},
+		#{userid},
+		#{username},
+		#{setname}
+		)
+	</insert>
+
+	<update id="updateNotice" parameterType="pd">
+		UPDATE T_NOTICE
+		SET
+		title=#{title},
+		starttime=#{starttime},
+		endtime=#{endtime},
+		content=#{content},
+		setname=#{setname},
+		userid=#{userid},
+		username=#{username}
+		WHERE id=#{id}
+	</update>
+
+    <delete id="deleteOne" parameterType="pd">
+		DELETE FROM T_NOTICE WHERE id=#{id}
+	</delete>
+    <!-- 批量删除 -->
+    <delete id="deleteAll" parameterType="pd">
+        delete from
+        T_NOTICE
+        where
+        id in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+	<select id="findNoticeByid" parameterType="pd" resultType="pd">
+		SELECT id,readname,DATE_FORMAT(time,'%Y-%m-%d %H:%m:%s') time,type,noticeid,userid FROM T_NOTICE WHERE id=#{id}
+	</select>
+
+	<select id="findNoticeReadByidlistPage" parameterType="page" resultType="pd">
+		SELECT id,readname,DATE_FORMAT(time,'%Y-%m-%d %H:%m:%s') time,type,noticeid,userid FROM T_NOTICEREAD WHERE FIND_IN_SET(noticeid,#{pd.noticeid}) order by id desc
+	</select>
+
+	<insert id="insertNoticeRead" parameterType="pd" >
+		INSERT INTO T_NOTICEREAD(
+		readname,
+		userid,
+		time,
+		type,
+		noticeid
+		)VALUES (
+		#{readname},
+		#{userid},
+		#{time},
+		#{type},
+		#{noticeid}
+		)
+	</insert>
+	<update id="updateNoticeRead" parameterType="pd">
+		UPDATE T_NOTICEREAD
+		SET
+		readname=#{readname},
+		time=#{time},
+		type=#{type},
+		noticeid=#{noticeid}
+		WHERE id=#{id}
+	</update>
+	<delete id="deleteNoticeRead" parameterType="pd">
+		delete FROM T_NOTICEREAD WHERE noticeid=#{id}
+	</delete>
+
+	<select id="getExcept" parameterType="pd" resultType="pd">
+		SELECT * from tzxlb WHERE dept LIKE CONCAT(CONCAT((SELECT dept from tzxlb where zxid=#{id}),'%'))
+	</select>
+	
+	<select id="getUsername" parameterType="pd" resultType="pd">
+		select zxxm from tzxlb where zxid=#{id}
+	</select>
+
+	<select id="noticeByUserIdlistPage" parameterType="Page" resultType="pd">
+		SELECT
+		a.title,
+		a.starttime,
+		a.endtime,
+		a.userid,
+		a.content,
+		a.setname,
+		a.username,
+		b.id,
+		b.readname,
+		b.time,
+		b.type,
+		b.noticeid
+		FROM t_notice a,t_noticeread b
+		WHERE a.id=b.noticeid
+		AND b.userid=#{pd.userid}
+		<if test="pd.setname!=null and pd.setname!=''" >
+			and a.setname=#{pd.setname}
+		</if>
+		AND endtime>NOW()
+		order by a.starttime desc
+	</select>
+
+	<update id="changeReadById" parameterType="pd">
+		UPDATE T_NOTICEREAD
+		SET
+		time=#{time},
+		type=#{type}
+		WHERE id=#{id}
+	</update>
+
+</mapper>

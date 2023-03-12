@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="MonitorMapper">
+    <select id="getServiceAnalysisBC" parameterType="pd" resultType="pd">
+        SELECT
+        zx.zxid,
+        ifnull( result.busyNum, 0 ) AS 'busyNum',
+        ifnull( result.answerNum, 0 ) AS 'answerNum'
+        FROM
+        tzxlb zx
+        LEFT JOIN (
+        SELECT
+        jl.zxid,
+        count( CASE WHEN jt.id IS NULL THEN 1 ELSE NULL END ) AS 'busyNum',
+        count( CASE WHEN jt.id IS NOT NULL THEN 1 ELSE NULL END ) AS 'answerNum'
+        FROM
+        tthjl jl
+        LEFT JOIN tthjl_zxjtls jt ON jt.thjl_id = jl.id
+        <where>
+            <if test="startTime != null and startTime != ''">jt.hjsj &gt; #{startTime} </if>
+        </where>
+        GROUP BY
+        jl.zxid
+        ) result ON zx.zxid = result.zxid
+        WHERE
+        zx.role_id IN (
+        'e8ae4534ec0047bbaaf5081ed7de9daa',
+        '837acb4d0c344e4b8e3d7d9678230195')
+    </select>
+
+    <select id="getServiceAnalysisSG" parameterType="pd" resultType="pd">
+        SELECT
+        zx.zxid,
+        ifnull( result.answerNum, '0' ) AS 'answerNum',
+        ifnull( result.count, '0' ) AS 'count'
+        FROM
+        tzxlb zx
+        LEFT JOIN (
+        SELECT
+        jl.zxid,
+        count( CASE WHEN jt.id IS NOT NULL THEN 1 ELSE NULL END ) AS 'answerNum',
+        count(jl.zxid) AS 'count'
+        FROM
+        tthjl jl
+        LEFT JOIN tthjl_zxjtls jt ON jt.thjl_id = jl.id
+        <where>
+            <if test="startTime != null and startTime != ''">jt.hjsj &gt; #{startTime} </if>
+        </where>
+        GROUP BY
+        jl.zxid
+        ) result ON zx.zxid = result.zxid
+        WHERE
+        zx.role_id IN (
+        'e8ae4534ec0047bbaaf5081ed7de9daa',
+        '837acb4d0c344e4b8e3d7d9678230195')
+    </select>
+
+    <select id="getServiceAnalysisLC" resultType="pd" parameterType="pd">
+SELECT
+	'周一' AS 'time',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID IN ( 'e8ae4534ec0047bbaaf5081ed7de9daa', '837acb4d0c344e4b8e3d7d9678230195' )) THEN 1 ELSE NULL END ) AS 'answerCount',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID = 'e8ae4534ec0047bbaaf5081ed7de9daa' ) THEN 1 ELSE NULL END ) AS 'ptCount',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID = '837acb4d0c344e4b8e3d7d9678230195' ) THEN 1 ELSE NULL END ) AS 'tsCount'
+FROM
+	tthjl jl
+	LEFT JOIN tthjl_zxjtls jt ON jt.thjl_id = jl.id
+WHERE
+	jt.kssj BETWEEN #{Mon} AND #{Tues}
+UNION ALL
+SELECT
+	'周二' AS 'time',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID IN ( 'e8ae4534ec0047bbaaf5081ed7de9daa', '837acb4d0c344e4b8e3d7d9678230195' )) THEN 1 ELSE NULL END ) AS 'answerCount',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID = 'e8ae4534ec0047bbaaf5081ed7de9daa' ) THEN 1 ELSE NULL END ) AS 'ptCount',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID = '837acb4d0c344e4b8e3d7d9678230195' ) THEN 1 ELSE NULL END ) AS 'tsCount'
+FROM
+	tthjl jl
+	LEFT JOIN tthjl_zxjtls jt ON jt.thjl_id = jl.id
+WHERE
+	jt.kssj BETWEEN #{Tues} AND #{Wed}
+UNION ALL
+SELECT
+	'周三' AS 'time',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID IN ( 'e8ae4534ec0047bbaaf5081ed7de9daa', '837acb4d0c344e4b8e3d7d9678230195' )) THEN 1 ELSE NULL END ) AS 'answerCount',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID = 'e8ae4534ec0047bbaaf5081ed7de9daa' ) THEN 1 ELSE NULL END ) AS 'ptCount',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID = '837acb4d0c344e4b8e3d7d9678230195' ) THEN 1 ELSE NULL END ) AS 'tsCount'
+FROM
+	tthjl jl
+	LEFT JOIN tthjl_zxjtls jt ON jt.thjl_id = jl.id
+WHERE
+	jt.kssj BETWEEN #{Wed} AND #{Thur}
+UNION ALL
+SELECT
+	'周四' AS 'time',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID IN ( 'e8ae4534ec0047bbaaf5081ed7de9daa', '837acb4d0c344e4b8e3d7d9678230195' )) THEN 1 ELSE NULL END ) AS 'answerCount',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID = 'e8ae4534ec0047bbaaf5081ed7de9daa' ) THEN 1 ELSE NULL END ) AS 'ptCount',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID = '837acb4d0c344e4b8e3d7d9678230195' ) THEN 1 ELSE NULL END ) AS 'tsCount'
+FROM
+	tthjl jl
+	LEFT JOIN tthjl_zxjtls jt ON jt.thjl_id = jl.id
+WHERE
+	jt.kssj BETWEEN #{Thur} AND #{Fri}
+UNION ALL
+SELECT
+	'周五' AS 'time',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID IN ( 'e8ae4534ec0047bbaaf5081ed7de9daa', '837acb4d0c344e4b8e3d7d9678230195' )) THEN 1 ELSE NULL END ) AS 'answerCount',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID = 'e8ae4534ec0047bbaaf5081ed7de9daa' ) THEN 1 ELSE NULL END ) AS 'ptCount',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID = '837acb4d0c344e4b8e3d7d9678230195' ) THEN 1 ELSE NULL END ) AS 'tsCount'
+FROM
+	tthjl jl
+	LEFT JOIN tthjl_zxjtls jt ON jt.thjl_id = jl.id
+WHERE
+	jt.kssj BETWEEN #{Fri} AND #{Sat}
+UNION ALL
+SELECT
+	'周六' AS 'time',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID IN ( 'e8ae4534ec0047bbaaf5081ed7de9daa', '837acb4d0c344e4b8e3d7d9678230195' )) THEN 1 ELSE NULL END ) AS 'answerCount',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID = 'e8ae4534ec0047bbaaf5081ed7de9daa' ) THEN 1 ELSE NULL END ) AS 'ptCount',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID = '837acb4d0c344e4b8e3d7d9678230195' ) THEN 1 ELSE NULL END ) AS 'tsCount'
+FROM
+	tthjl jl
+	LEFT JOIN tthjl_zxjtls jt ON jt.thjl_id = jl.id
+WHERE
+	jt.kssj BETWEEN #{Sat} AND #{Sun}
+UNION ALL
+SELECT
+	'周日' AS 'time',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID IN ( 'e8ae4534ec0047bbaaf5081ed7de9daa', '837acb4d0c344e4b8e3d7d9678230195' )) THEN 1 ELSE NULL END ) AS 'answerCount',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID = 'e8ae4534ec0047bbaaf5081ed7de9daa' ) THEN 1 ELSE NULL END ) AS 'ptCount',
+	count( CASE WHEN jt.zxid IN ( SELECT zxid FROM tzxlb WHERE ROLE_ID = '837acb4d0c344e4b8e3d7d9678230195' ) THEN 1 ELSE NULL END ) AS 'tsCount'
+FROM
+	tthjl jl
+	LEFT JOIN tthjl_zxjtls jt ON jt.thjl_id = jl.id
+WHERE
+	jt.kssj BETWEEN #{Sun} AND #{NextMon}
+    </select>
+
+    <select id="getReceptionTime" resultType="pd" parameterType="pd">
+SELECT
+	average.*,
+	busy.busyTime
+FROM
+	(
+	SELECT
+		zx.zxid,
+		ifnull( result.averageDuration, '0' ) AS 'averageDuration'
+	FROM
+		tzxlb zx
+		LEFT JOIN (
+		SELECT
+			jt.zxid,
+			round( sum( jt.fwsj )/ count( jt.zxid )/ 60 ) AS 'averageDuration'
+		FROM
+			tthjl_zxjtls jt
+        <where>
+            <if test="startTime != null and startTime != ''">jt.hjsj &gt; #{startTime} </if>
+        </where>
+		GROUP BY
+			jt.zxid
+		) result ON zx.zxid = result.zxid
+	WHERE
+		zx.role_id IN ( 'e8ae4534ec0047bbaaf5081ed7de9daa', '837acb4d0c344e4b8e3d7d9678230195' )
+	) average
+	LEFT JOIN (
+	SELECT
+		zx.zxid,
+		ifnull( result.busyTime, '0' ) AS 'busyTime'
+	FROM
+		tzxlb zx
+		LEFT JOIN (
+		SELECT
+			rz.zx,
+			round( sum( CASE WHEN rz.note = '示忙' THEN rz.ljsj ELSE NULL END )/ 60 ) AS 'busyTime'
+		FROM
+			tzxczrz rz
+        <where>
+            <if test="startTime != null and startTime != ''">rz.fssj &gt; #{startTime} </if>
+        </where>
+		GROUP BY
+			rz.zx
+		) result ON zx.zxid = result.zx
+	WHERE
+	zx.role_id IN ( 'e8ae4534ec0047bbaaf5081ed7de9daa', '837acb4d0c344e4b8e3d7d9678230195' )
+	) busy ON average.zxid = busy.zxid
+    </select>
+
+    <select id="getWorkOrderProcessing" parameterType="pd" resultType="pd">
+ SELECT
+	a.`before`,
+	a.`after`,
+	a.processing,
+	b.approval
+FROM
+	(
+	SELECT
+		'1' AS `concat1`,
+		count( CASE WHEN type IN ( '0', '1', '2' ) THEN 1 ELSE NULL END ) AS 'before',
+		count( CASE WHEN type = '3' THEN 1 ELSE NULL END ) AS 'processing',
+		count( CASE WHEN type = '4' THEN 1 ELSE NULL END ) AS 'after'
+	FROM
+		t_workorder w
+	WHERE
+		w.tsclassify = 'b86245ef65804dffa40726f16539625d'
+	) a
+	LEFT JOIN ( SELECT '1' AS `concat1`, count( id_ ) AS `approval` FROM `act_ru_task` WHERE NAME_ LIKE '%审批' ) b ON a.concat1 = b.concat1
+    </select>
+
+    <select id="getWorkOrderProcessingCount" parameterType="pd" resultType="pd">
+        SELECT
+	count(
+	( CASE WHEN w.tssource = ( SELECT d.DICTIONARIES_ID FROM sys_dictionaries d WHERE d.`name` = '12345热线' ) THEN 1 ELSE NULL END )) AS 12345Count,
+	count(
+	( CASE WHEN w.tssource = ( SELECT d.DICTIONARIES_ID FROM sys_dictionaries d WHERE d.`name` = '随手拍' ) THEN 1 ELSE NULL END )) AS serviceCount,
+	count(
+		(
+		CASE
+
+				WHEN w.tssource = ( SELECT d.DICTIONARIES_ID FROM sys_dictionaries d WHERE d.`name` = '随手拍' )
+				AND w.type IN ( '0', '1', '2', '3' ) THEN
+					1 ELSE NULL
+				END
+				)) AS incompleteServiceCount
+	FROM
+	t_workorder w
+    </select>
+</mapper>

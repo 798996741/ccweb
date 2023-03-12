@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="FileMapper">
+
+    <select id="FileList" parameterType="pd" resultType="pd">
+        select * from lostandfound_file where article_id=#{articlId}
+        <if test="type=1">
+        	and type=1
+        </if>
+        <if test="type=0">
+        	and type <![CDATA[ <> ]]> 0
+        </if>
+        ORDER BY create_time DESC
+    </select>
+
+    <delete id="delFilesByArticleId" parameterType="pd" >
+        delete  from lostandfound_file where article_id=#{articlId}
+    </delete>
+
+
+    <update id="updateNullFile" parameterType="list">
+       UPDATE lostandfound_file SET article_id = #{articleIdentifier} WHERE id IN
+       <foreach collection="ids" open="(" close=")" separator="," item="item">
+           #{item}
+       </foreach>
+    </update>
+
+    <select id="findFileToArticleIdIsNull" resultType="pd">
+        select * from lostandfound_file where article_id is null
+    </select>
+
+    <delete id="delFileToArticleIdIsNull" >
+        delete from lostandfound_file where article_id is null
+    </delete>
+
+
+</mapper>

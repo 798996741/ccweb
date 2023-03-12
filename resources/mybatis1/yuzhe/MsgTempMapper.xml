@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MsgTempMapper">
+    <insert id="AddMsgTemp" parameterType="pd">
+        insert into lostandfound_msgtemp(content,tempname,czman,czdate)
+        values(#{content},#{tempname},#{czman},#{czdate})
+    </insert>
+
+    <select id="MsgTemplistPage" resultType="pd" parameterType="page">
+        select * from lostandfound_msgtemp
+        where 1=1
+        <if test="pd.keywords!=null and pd.keywords!='' ">
+            AND CONCAT_WS('-',IFNULL(tempname,''),IFNULL(content,''))
+            like CONCAT('%',#{pd.keywords},'%')
+        </if>
+        ORDER BY `czdate` DESC
+    </select>
+
+    <delete id="delMsgTemp" parameterType="pd">
+        delete from lostandfound_msgtemp where id=#{id}
+    </delete>
+
+    <select id="FindMsgById" parameterType="pd" resultType="pd">
+        select * from lostandfound_msgtemp where id=#{id}
+    </select>
+
+    <update id="UpdMsgById" parameterType="pd" >
+        update lostandfound_msgtemp set tempname=#{tempname},content=#{content},czman=#{czman},czdate=#{czdate} where id=#{id}
+    </update>
+
+    <insert id="SendMsg" parameterType="pd" useGeneratedKeys="true" keyProperty="id">
+        insert into lostandfound_msglog values(#{id},#{temp},#{content},#{phone},#{sendman},#{state},#{sendtime},#{returnmsg},#{uid},#{phoneid},#{ucid},#{czman},#{czdate})
+    </insert>
+
+    <update id="UpdMsgStatus" parameterType="pd">
+        update lostandfound_msglog set
+        state=#{state},returnmsg=#{returnmsg}
+        where id=#{id}
+    </update>
+
+    <select id="MsgTempList" resultType="pd">
+        select * from lostandfound_msgtemp
+    </select>
+
+    <!--短信历史记录分页查询-->
+    <select id="MsgLoglistPage" parameterType="page" resultType="pd">
+        select a.*,b.zxxm,c.tempname from lostandfound_msglog a
+        inner join tzxlb b
+        on a.sendman=b.zxid
+        inner join lostandfound_msgtemp c
+        on a.temp=c.id
+        where 1=1
+        <if test=" (pd.StartTime != null and pd.StartTime!='') and  (pd.EndTime!=null and pd.EndTime!='')">
+            AND a.sendtime BETWEEN #{pd.StartTime} AND #{pd.EndTime}
+        </if>
+        <if test="(pd.StartTime!=null and pd.StartTime!='') and (pd.EndTime==null or pd.EndTime=='')">
+            AND a.sendtime >= #{pd.StartTime}
+        </if>
+        <if test="(pd.EndTime!=null and pd.EndTime!='') and (pd.StartTime==null or pd.StartTime=='')">
+            AND #{pd.EndTime} >= a.sendtime
+        </if>
+        <if test="pd.phone!=null and pd.phone!='' ">
+            AND a.phone=#{pd.phone}
+        </if>
+        <if test="pd.keywords!=null and pd.keywords!='' ">
+            AND CONCAT_WS('-',IFNULL(b.zxxm,''),IFNULL(c.tempname,''),IFNULL(a.phone,''),IFNULL(a.content,''))
+            like CONCAT('%',#{pd.keywords},'%')
+        </if>
+        ORDER BY a.czdate DESC
+    </select>
+
+    <!--短信历史记录查询，用于导出-->
+    <select id="MsgLoglist" parameterType="pd" resultType="pd">
+        select a.*,b.zxxm,c.tempname from lostandfound_msglog a
+        inner join tzxlb b
+        on a.sendman=b.zxid
+        inner join lostandfound_msgtemp c
+        on a.temp=c.id
+        where 1=1
+        <if test=" (StartTime != null and StartTime!='') and  (EndTime!=null and EndTime!='')">
+            AND a.sendtime BETWEEN #{StartTime} AND #{EndTime}
+        </if>
+        <if test="(StartTime!=null and StartTime!='') and (EndTime==null or EndTime=='')">
+            AND a.sendtime >= #{StartTime}
+        </if>
+        <if test="(EndTime!=null and EndTime!='') and (StartTime==null or StartTime=='')">
+            AND #{EndTime} >= a.sendtime
+        </if>
+        <if test="phone!=null and phone!='' ">
+            AND a.phone=#{phone}
+        </if>
+        <if test="keywords!=null and keywords!='' ">
+            AND CONCAT_WS('-',IFNULL(b.zxxm,''),IFNULL(c.tempname,''),IFNULL(a.phone,''),IFNULL(a.content,''))
+            like CONCAT('%',#{keywords},'%')
+        </if>
+        ORDER BY a.czdate DESC
+    </select>
+
+    <!--根据短信记录id查询短信记录-->
+    <select id="GetMsgLogById" resultType="pd" parameterType="pd">
+        select a.*,b.zxxm,c.tempname from lostandfound_msglog a
+        inner join tzxlb b
+        on a.sendman=b.zxid
+        inner join lostandfound_msgtemp c
+        on a.temp=c.id
+        where a.id=#{id}
+    </select>
+</mapper>

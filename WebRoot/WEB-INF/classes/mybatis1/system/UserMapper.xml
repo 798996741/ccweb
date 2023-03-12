@@ -1,0 +1,571 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="UserMapper">
+
+	<resultMap type="User" id="userAndRoleResultMap">
+		<result column="USER_ID" property="USER_ID"/>
+		<result column="USERNAME" property="USERNAME"/>
+		<result column="PASSWORD" property="PASSWORD"/>
+		<result column="NAME" property="NAME"/>
+		<result column="RIGHTS" property="RIGHTS"/>
+		<result column="LAST_LOGIN" property="LAST_LOGIN"/>
+		<result column="IP" property="IP"/>
+		<result column="STATUS" property="STATUS"/>
+		<result column="SKIN" property="SKIN"/>
+		<result column="MENU_IDS" property="MENU_IDS"/>
+		<result column="DWBM" property="DWBM"/>
+		<result column="PHONE" property="PHONE"/>
+		<association property="role" column="ROLE_ID" javaType="Role">
+			<id column="ROLE_ID" property="ROLE_ID"/>
+			<result column="ROLE_NAME" property="ROLE_NAME"/>
+			<result column="ROLE_RIGHTS" property="RIGHTS"/>
+		</association>
+	</resultMap>
+	<resultMap type="User" id="userResultMap">
+		<result column="USER_ID" property="USER_ID"/>
+		<result column="USERNAME" property="USERNAME"/>
+		<result column="PASSWORD" property="PASSWORD"/>
+		<result column="NAME" property="NAME"/>
+		<result column="RIGHTS" property="RIGHTS"/>
+		<result column="LAST_LOGIN" property="LAST_LOGIN"/>
+		<result column="IP" property="IP"/>
+		<result column="STATUS" property="STATUS"/>
+		<result column="ROLE_ID" property="ROLE_ID"/>
+		<result column="SKIN" property="SKIN"/>
+		<result column="DWBM" property="DWBM"/>
+		<result column="PHONE" property="PHONE"/>
+	</resultMap>
+	
+	<!--表名 -->
+	<sql id="tableName">
+		SYS_USER
+	</sql>
+	<sql id="roleTableName">
+		SYS_ROLE
+	</sql>
+	<sql id="staffTableName">
+		OA_STAFF
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		USER_ID,
+		USERNAME,
+		PASSWORD,
+		NAME,
+		RIGHTS,
+		ROLE_ID,
+		LAST_LOGIN,
+		IP,
+		STATUS,
+		BZ,
+		SKIN,
+		EMAIL,
+		NUM,
+		PHONE,
+		ZXZ,
+		DWBM,
+		wxid,
+		isshow
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{USER_ID},
+		#{USERNAME},
+		#{PASSWORD},
+		#{NAME},
+		#{RIGHTS},
+		#{ROLE_ID},
+		#{LAST_LOGIN},
+		#{IP},
+		#{STATUS},
+		#{BZ},
+		#{SKIN},
+		#{EMAIL},
+		#{NUM},
+		#{PHONE},
+		#{ZXZ},
+		#{DWBM},
+		#{wxid},
+		#{isshow}
+	</sql>
+	
+	<!-- 判断用户名和密码 -->
+	<select id="getUserInfo" parameterType="pd" resultType="pd">
+		select <include refid="Field"></include> from
+		<include refid="tableName"></include>
+		where 1=1
+		<if test="USERNAME!=null and PASSWORD!=null">
+		and USERNAME= #{USERNAME} and PASSWORD=#{PASSWORD}
+		</if>
+		<if test="USER_ID!=null and USER_ID>0">
+		and USER_ID = #{USER_ID}
+		</if>
+	</select>
+	
+	<!-- 更新登录时间 -->
+	<update id="updateLastLogin" parameterType="pd" >
+		update
+		<include refid="tableName"></include>
+		set 
+			LAST_LOGIN = #{LAST_LOGIN} 
+		where USER_ID = #{USER_ID}
+	</update>
+	
+	<!-- 通过用户ID获取用户信息和角色信息 -->
+	<select id="getUserAndRoleById" parameterType="String" resultMap="userAndRoleResultMap">
+		select  u.USER_ID,
+				u.USERNAME,
+				u.NAME,
+				u.RIGHTS as USER_RIGHTS,
+				u.PASSWORD,
+				u.SKIN,
+				u.DWBM,
+				u.PHONE,
+				u.wxid,
+				r.ROLE_ID,
+				r.ROLE_NAME,
+				r.RIGHTS as ROLE_RIGHTS ,
+				u.ZXZ,
+				r.MENU_IDS
+		from 
+		<include refid="tableName"></include> u 
+		left join 
+		<include refid="roleTableName"></include> r 
+		on u.ROLE_ID=r.ROLE_ID
+		where u.STATUS=0 
+		and u.USER_ID=#{USER_ID}
+	</select>
+	
+	<!-- 通过USERNAME获取数据 -->
+	<select id="findByUsername" parameterType="pd" resultType="pd" >
+		select 
+			<include refid="Field"></include>
+		from 
+			<include refid="tableName"></include>
+		where 1=1
+			<if test="wxid!=null and wxid!='' ">
+				and wxid = #{wxid}
+			</if>
+			<if test="USERNAME!=null and USERNAME!='' ">
+				and USERNAME = #{USERNAME}
+			</if>
+	</select>
+	
+	<!-- 存入IP -->
+	<update id="savIP" parameterType="pd" >
+		update 
+		<include refid="tableName"></include> 
+		set
+			IP = #{IP}
+		where 
+			USERNAME= #{USERNAME}
+	</update>
+	
+	<!-- 列出某角色下的所有用户 -->
+	<select id="listAllUserByRoldId"  parameterType="pd" resultType="pd" >
+		select USER_ID
+		from 
+		<include refid="tableName"></include>
+		where 
+			ROLE_ID = #{ROLE_ID}
+	</select>
+	
+	<!-- 用户列表 -->
+	<select id="userlist" parameterType="page" resultType="pd" >
+		select a.*,(select GROUP_CONCAT(b.name)  FROM t_area b  where FIND_IN_SET(b.area_code,a.DWBM) ) as AREA_NAME
+		 from (select  u.USER_ID,
+				u.USERNAME,
+				u.PASSWORD,
+				u.LAST_LOGIN,
+				u.NAME,
+				u.IP,
+				u.EMAIL,
+				u.NUM,
+				u.DWBM,
+				u.PHONE,
+				u.wxid,
+				r.ROLE_ID,
+				r.ROLE_NAME,
+				u.ZXZ,
+				r.MENU_IDS
+		from <include refid="tableName"></include> u, <include refid="roleTableName"></include> r 
+		
+		where u.ROLE_ID = r.ROLE_ID 
+		and u.USERNAME != 'admin'
+		and r.PARENT_ID = '1'
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+					 u.USERNAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or 
+					 u.EMAIL LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+					 or
+					 u.NUM LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or
+					 u.NAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or
+					 u.PHONE LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				)
+		</if>
+		<if test="pd.ROLE_ID != null and pd.ROLE_ID != ''"><!-- 角色检索 -->
+			and u.ROLE_ID=#{pd.ROLE_ID} 
+		</if>
+		<if test="pd.USERNAME != null and pd.USERNAME != 'admin'"><!-- 角色检索 -->
+			and u.isshow='1' 
+		</if>
+		<if test="pd.lastLoginStart!=null and pd.lastLoginStart!=''"><!-- 登录时间检索 -->
+			and u.LAST_LOGIN &gt;= #{pd.lastLoginStart} 
+		</if>
+		<if test="pd.lastLoginEnd!=null and pd.lastLoginEnd!=''"><!-- 登录时间检索 -->
+			and u.LAST_LOGIN &lt;= #{pd.lastLoginEnd} 
+		</if>
+		) a
+		order by LAST_LOGIN desc
+	</select>
+	
+	<!-- 用户列表(弹窗选择用) -->
+	<select id="userBystafflistPage" parameterType="page" resultType="pd" >
+		select  u.USER_ID,
+				u.USERNAME,
+				u.PASSWORD,
+				u.LAST_LOGIN,
+				u.NAME,
+				u.IP,
+				u.EMAIL,
+				u.NUM,
+				u.DWBM,
+				u.PHONE,
+				r.ROLE_ID,
+				r.ROLE_NAME,
+				u.ZXZ,
+				r.MENU_IDS
+		from <include refid="tableName"></include> u, <include refid="roleTableName"></include> r 
+		where u.ROLE_ID = r.ROLE_ID 
+		and u.USERNAME != 'admin'
+		and r.PARENT_ID = '1'
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+					 u.USERNAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or 
+					 u.EMAIL LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+					 or
+					 u.NUM LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or
+					 u.NAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or
+					 u.PHONE LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				)
+		</if>
+		<if test="pd.ROLE_ID != null and pd.ROLE_ID != ''"><!-- 角色检索 -->
+			and u.ROLE_ID=#{pd.ROLE_ID} 
+		</if>
+		<if test="pd.lastLoginStart!=null and pd.lastLoginStart!=''"><!-- 登录时间检索 -->
+			and u.LAST_LOGIN &gt;= #{pd.lastLoginStart} 
+		</if>
+		<if test="pd.lastLoginEnd!=null and pd.lastLoginEnd!=''"><!-- 登录时间检索 -->
+			and u.LAST_LOGIN &lt;= #{pd.lastLoginEnd} 
+		</if>
+		and u.USERNAME not in (select s.USER_ID from <include refid="staffTableName"></include> s where s.USER_ID !='')
+		order by u.LAST_LOGIN desc
+	</select>
+	
+	<!-- 通过邮箱获取数据 -->
+	<select id="findByUE" parameterType="pd" resultType="pd" >
+		select 
+			<include refid="Field"></include>
+		from 
+			<include refid="tableName"></include>
+		where 
+			EMAIL = #{EMAIL}
+		<if test="USERNAME != null and USERNAME != ''">
+			and USERNAME != #{USERNAME} 
+		</if>
+	</select>
+	
+	<!-- 通过编号获取数据 -->
+	<select id="findByUN" parameterType="pd" resultType="pd" >
+		select 
+			<include refid="Field"></include>
+		from 
+			<include refid="tableName"></include>
+		where 
+			NUM = #{NUM}
+		<if test="USERNAME != null and USERNAME != ''">
+			and USERNAME != #{USERNAME} 
+		</if>
+	</select>
+	
+	<!-- 通过user_id获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd" >
+		select 
+			USER_ID,   USERNAME,   PASSWORD,a.NAME,RIGHTS,ROLE_ID,   LAST_LOGIN,   IP,   STATUS,   BZ, 
+			  SKIN,   EMAIL,   NUM,   PHONE,   ZXZ,   DWBM   ,a.wxid
+			  ,(select GROUP_CONCAT(c.area_id)  FROM t_area c  where FIND_IN_SET(c.area_code,a.DWBM) ) as AREA_ID
+			  ,(select GROUP_CONCAT(c.name)  FROM t_area c  where FIND_IN_SET(c.area_code,a.DWBM) ) as AREA_NAME
+		from 
+			<include refid="tableName"></include> a left join T_AREA b on a.DWBM=b.AREA_CODE
+		where 
+			USER_ID = #{USER_ID}
+	</select>
+	
+	<!-- 新增用户 -->
+	<insert id="saveU" parameterType="pd" >
+		insert into <include refid="tableName"></include> (
+			<include refid="Field"></include>
+		) values (
+			<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="editU" parameterType="pd" >
+		update  <include refid="tableName"></include>
+			set	NAME 					= #{NAME},
+				ROLE_ID 				= #{ROLE_ID},
+				BZ					= #{BZ},
+				EMAIL					= #{EMAIL},
+				NUM				= #{NUM},
+				PHONE					= #{PHONE},
+				ZXZ					= #{ZXZ},
+				DWBM					= #{DWBM},
+				wxid					= #{wxid},
+				STATUS					= #{STATUS}
+			<if test="PASSWORD != null and PASSWORD != ''">
+				,PASSWORD				= #{PASSWORD}
+			</if>
+			where 
+				USER_ID = #{USER_ID}
+	</update>
+	
+	<!-- 修改 -->
+	<update id="editPwd" parameterType="pd" >
+		update  <include refid="tableName"></include>
+			set	PASSWORD				= #{PASSWORD}
+			where 
+				USER_ID = #{USER_ID}
+	</update>
+	
+	
+	<!-- 删除用户 -->
+	<delete id="deleteU" parameterType="pd" flushCache="false">
+		delete from <include refid="tableName"></include>
+		where 
+			USER_ID = #{USER_ID}
+		and 
+			USER_ID != '1'
+	</delete>
+	
+	<!-- 批量删除用户 -->
+	<delete id="deleteAllU" parameterType="String" >
+		delete from <include refid="tableName"></include>
+		where 
+			USER_ID in
+  			 <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                  #{item}
+             </foreach>
+        and 
+			USER_ID != '1'
+	</delete>
+	
+	<!-- 用户列表(全部) -->
+	<select id="listAllUser" parameterType="pd" resultType="pd" >
+		select  u.USER_ID,
+				u.USERNAME,
+				u.PASSWORD,
+				u.LAST_LOGIN,
+				u.NAME,
+				u.IP,
+				u.EMAIL,
+				u.NUM,
+				u.PHONE,
+				u.DWBM,
+				u.wxid,
+				r.ROLE_ID,
+				r.ROLE_NAME,
+				r.MENU_IDS
+		from <include refid="tableName"></include> u, <include refid="roleTableName"></include> r 
+		where u.ROLE_ID = r.ROLE_ID 
+		and u.USERNAME != 'admin'
+		and r.PARENT_ID = '1'
+		<if test="keywords!= null and keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+					 u.USERNAME LIKE CONCAT(CONCAT('%', #{keywords}),'%')
+					 or 
+					 u.EMAIL LIKE CONCAT(CONCAT('%', #{keywords}),'%') 
+					 or
+					 u.NUM LIKE CONCAT(CONCAT('%', #{keywords}),'%')
+					 or
+					 u.NAME LIKE CONCAT(CONCAT('%', #{keywords}),'%')
+					 or
+					 u.PHONE LIKE CONCAT(CONCAT('%', #{keywords}),'%')
+				)
+		</if>
+		<if test="ROLE_ID != null and ROLE_ID != ''"><!-- 角色检索 -->
+			and u.ROLE_ID=#{ROLE_ID} 
+		</if>
+		<if test="DWBM != null and DWBM != ''"><!-- 角色检索 -->
+			and u.DWBM=#{DWBM} 
+		</if>
+		<if test="lastLoginStart!=null and lastLoginStart!=''"><!-- 登录时间检索 -->
+			and u.LAST_LOGIN &gt;= #{lastLoginStart} 
+		</if>
+		<if test="lastLoginEnd!=null and lastLoginEnd!=''"><!-- 登录时间检索 -->
+			and u.LAST_LOGIN &lt;= #{lastLoginEnd} 
+		</if>
+		<if test="ZXLB!=null and ZXLB!=''"><!-- 登录时间检索 -->
+			and u.USERNAME not in (
+				select zxyh from TZXLB where 1=1
+				<if test="ZXYH!=null and ZXYH!=''">
+					and zxyh!=#{ZXYH} 
+				</if>
+				<if test="ID!=null and ID!=''">
+					and ID!=#{ID} 
+				</if>
+			)
+		</if>
+		
+		order by u.DWBM asc,u.LAST_LOGIN desc
+	</select>
+	
+	<!-- 获取总数 -->
+	<select id="getUserCount" parameterType="String" resultType="pd">
+		select 
+			count("USER_ID") userCount
+		from 
+		<include refid="tableName"></include>
+	</select>
+	
+	
+	<!-- 获取总数 -->
+	<select id="getUserByRoleName" parameterType="pd" resultType="pd">
+		SELECT <include refid="Field"></include> from
+		<include refid="tableName"></include> a 
+		where EXISTS 
+		(select ROLE_ID from sys_role b where  1=1
+		<if test="ROLE_NAME!=null and ROLE_NAME"><!-- 登录时间检索 -->
+			and b.ROLE_NAME =#{ROLE_NAME}  
+		</if>
+		<if test="ROLE_NAMES!=null and ROLE_NAMES"><!-- 登录时间检索 -->
+			and find_in_set(b.ROLE_NAME,#{ROLE_NAMES})
+		</if>
+		<if test="ROLE_ID!=null and ROLE_ID"><!-- 登录时间检索 -->
+			and b.ROLE_ID =#{ROLE_ID}  
+		</if> 
+		
+		<if test="tsdept!=null and tsdept!=''"><!-- 登录时间检索 -->
+			and find_in_set(a.DWBM,#{tsdept})  
+		</if> 
+		
+		
+		and a.ROLE_ID=b.role_id) 
+	</select>
+	
+	
+	<!-- 判断用户名和密码 -->
+	<select id="getUserInfoByUsername" parameterType="pd" resultType="pd">
+		select a.*,b.name as areaname from
+		<include refid="tableName"></include> a
+		left join t_area b on a.dwbm=b.area_code
+		where 1=1
+		<if test="USERNAME!=null and USERNAME!=''">
+			and USERNAME= #{USERNAME} 
+		</if>
+		<if test="USER_ID!=null and USER_ID!='' ">
+			and USER_ID = #{USER_ID}
+		</if>
+		<if test="wxid!=null and wxid!='' ">
+			and wxid = #{wxid}
+		</if>
+		<if test="tsdept!=null and tsdept!='' ">
+			and dwbm find_in_set(dwbm, #{tsdept})
+		</if>
+	</select>
+
+	<select id="findwxuser" resultType="pd" parameterType="pd">
+		SELECT * FROM t_wxcustomer WHERE 1=1 AND userid NOT IN (SELECT wxid FROM sys_user WHERE wxid IS NOT NULL AND wxid!='')
+		 <if test="userid!=null and userid!=''">
+			 and userid=#{userid}
+		 </if>
+	</select>
+
+	<select id="finddiswxuser" resultType="pd" parameterType="pd">
+		select * from t_wxcustomer where 1=1
+		<if test="userid!=null and userid!=''">
+			and userid=#{userid}
+		</if>
+	</select>
+
+	<insert id="insertwxuser" parameterType="pd">
+		insert into t_wxcustomer(
+		userid,
+		name,
+		department,
+		position,
+		mobile,
+		gender,
+		email,
+		avatar,
+		status,
+		enable,
+		isleader,
+		hide_mobile,
+		english_name,
+		telephone,
+		qr_code,
+		alias,
+		is_leader_in_dept,
+		thumb_avatar
+		)values (
+		#{userid},
+		#{name},
+		#{department},
+		#{position},
+		#{mobile},
+		#{gender},
+		#{email},
+		#{avatar},
+		#{status},
+		#{enable},
+		#{isleader},
+		#{hide_mobile},
+		#{english_name},
+		#{telephone},
+		#{qr_code},
+		#{alias},
+		#{is_leader_in_dept},
+		#{thumb_avatar}
+		)
+	</insert>
+
+	<update id="updatewxuser" parameterType="pd">
+		update
+		t_wxcustomer
+		set
+		userid = #{userid},
+		name = #{name},
+		department = #{department},
+		position = #{position},
+		mobile = #{mobile},
+		gender = #{gender},
+		email = #{email},
+		avatar = #{avatar},
+		status = #{status},
+		enable = #{enable},
+		isleader = #{isleader},
+		hide_mobile = #{hide_mobile},
+		english_name = #{english_name},
+		telephone = #{telephone},
+		qr_code = #{qr_code},
+		alias = #{alias},
+		is_leader_in_dept = #{is_leader_in_dept},
+		thumb_avatar = #{thumb_avatar}
+		where
+		userid = #{userid}
+	</update>
+	
+</mapper>

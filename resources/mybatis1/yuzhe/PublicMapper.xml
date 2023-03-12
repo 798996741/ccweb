@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="PublicMapper">
+    <!--新增通知公告-->
+    <insert id="saveNotice" parameterType="pd">
+        insert into lostandfound_notice values (#{id},#{title},#{createtime},#{content},#{userid},#{setname})
+    </insert>
+    <!--新增个人公告-->
+    <insert id="saveNoticeread" parameterType="pd">
+        insert into lostandfound_noticeread values (#{id},#{readtime},#{type},#{noticeid},#{userid})
+    </insert>
+    <!--查询所有失物招领系统用户-->
+    <select id="getAllUser" parameterType="pd" resultType="pd">
+        select zxid from tzxlb where role_id='d160c67a6a244ad5ab65799dd8bdf780'
+    </select>
+    <!--通知公告列表-->
+    <select id="noticelistPage" parameterType="page" resultType="pd">
+        select  a.id as noticeid,a.title,DATE_FORMAT(a.createtime,'%Y-%m-%d %H:%i:%s') as createtime,a.content,b.zxxm
+        from lostandfound_notice  a
+        inner join tzxlb b
+        on a.setname=b.zxid
+        where 1=1
+        <if test="pd.keywords!=null and pd.keywords!=''" >
+            AND CONCAT_WS(
+            '-',IFNULL(a.title,''),
+            IFNULL(createtime,''),
+            IFNULL(a.content,''),
+            IFNULL(b.zxxm,'')
+            )
+            LIKE CONCAT('%',#{pd.keywords},'%')
+        </if>
+    </select>
+    <!--通知公告根据id查询-->
+    <select id="findNoticeById" parameterType="pd" resultType="pd">
+        select  a.id as noticeid,a.title,DATE_FORMAT(a.createtime,'%Y-%m-%d %H:%i:%s') as createtime,a.content, b.zxxm
+        from lostandfound_notice  a
+        inner join tzxlb b
+        on a.setname=b.zxid
+        where a.id=#{noticeid}
+    </select>
+    <!--通知公告根据id修改-->
+    <update id="updNotice" parameterType="pd">
+        update lostandfound_notice set
+        title=#{title},
+        createtime=#{createtime},
+        content=#{content}
+        where id=#{noticeid}
+    </update>
+    <!--通知公告根据id删除-->
+    <delete id="delNotice" parameterType="String">
+        delete from lostandfound_notice
+        where id in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+    <!--通知公告根据id删除后删除对应个人公告-->
+    <delete id="delMyNotice" parameterType="pd">
+        delete from lostandfound_noticeread where noticeid in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+    <!--未阅读公告列表-->
+    <select id="MyNoticelistPage" parameterType="page" resultType="pd">
+        select a.title,DATE_FORMAT(a.createtime,'%Y-%m-%d %H:%i:%s') as createtime,a.content,b.id,c.zxxm
+        from lostandfound_notice a
+        inner join lostandfound_noticeread b
+        on a.id=b.noticeid
+        inner join tzxlb c
+        on a.setname=c.zxid
+        where b.type=0
+        and b.userid=#{pd.zxid}
+        <if test="pd.keywords!=null and pd.keywords!=''" >
+            AND CONCAT_WS(
+            '-',IFNULL(a.title,''),
+            IFNULL(createtime,''),
+            IFNULL(a.content,''),
+            IFNULL(c.zxxm,'')
+            )
+            LIKE CONCAT('%',#{pd.keywords},'%')
+        </if>
+    </select>
+    <!--根据id修改阅读状态-->
+    <update id="readNotice" parameterType="pd">
+        update lostandfound_noticeread set
+        readtime=#{readtime},
+        type=1
+        where id=#{id}
+    </update>
+    <!--已阅读公告列表-->
+    <select id="readNoticelistPage" parameterType="page" resultType="pd">
+        select  a.title,DATE_FORMAT(a.createtime,'%Y-%m-%d %H:%i:%s') as createtime,
+        a.content,b.id,DATE_FORMAT(b.readtime,'%Y-%m-%d %H:%i:%s') as readtime,c.zxxm
+        from lostandfound_notice a
+        inner join lostandfound_noticeread b
+        on a.id=b.noticeid
+        inner join tzxlb c
+        on a.setname=c.zxid
+        where b.type=1
+        and b.userid=#{pd.zxid}
+        <if test="pd.keywords!=null and pd.keywords!=''" >
+            AND CONCAT_WS(
+            '-',IFNULL(a.title,''),
+            IFNULL(a.createtime,''),
+            IFNULL(a.content,''),
+            IFNULL(c.zxxm,'')
+            )
+            LIKE CONCAT('%',#{pd.keywords},'%')
+        </if>
+    </select>
+    <!--已未阅读公告id查询-->
+    <select id="findMyNoticeById" parameterType="pd" resultType="pd">
+        select a.title,DATE_FORMAT(a.createtime,'%Y-%m-%d %H:%i:%s') as createtime,a.content,
+         c.zxxm,DATE_FORMAT(b.readtime,'%Y-%m-%d %H:%i:%s') as readtime
+        from lostandfound_notice a
+        inner join lostandfound_noticeread b
+        on a.id=b.noticeid
+        inner join tzxlb c
+        on a.setname=c.zxid
+        where b.id=#{id}
+        and b.userid=#{zxid}
+    </select>
+</mapper>

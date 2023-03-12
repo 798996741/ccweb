@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="queryWorkMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		t_workorder
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		code,
+		tsdate,
+		tssource,
+		tsman,
+		tstel,
+		tscont,
+		tslevel,
+		tsdept,
+		tstype,	
+		tsclassify,	
+		dealman,	
+		ishf,
+		endtime,
+		endreason,
+		type,
+		cardid,
+		cjdate,
+		hbh,
+		uid,
+		clsx,
+		kscl,
+		czman,
+		czdate,
+		proc_id,
+		workid
+		
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{code},
+		#{tsdate},
+		#{tssource},
+		#{tsman},
+		#{tstel},
+		#{tscont},
+		#{tslevel},
+		#{tsdept},
+		#{tstype},	
+		#{tsclassify},	
+		#{dealman},	
+		#{ishf},
+		#{endtime},
+		#{endreason},
+		#{type},
+		#{cardid},
+		#{cjdate},
+		#{hbh},
+		#{uid},
+		#{clsx},
+		#{kscl},
+		#{czman},
+		now(),
+		#{proc_id},
+		#{workid}
+		
+		
+	</sql>
+
+	
+	<!-- 通过id获取数据 -->
+	<select id="findByid" parameterType="pd" resultType="pd">
+		select 
+		a.*,
+		b.name as tssourcename,
+		c.name as tslevelname,
+		d.name as tstypename,
+		e.name as tsclassifyname,
+		f.name as tsdeptname,
+		g.name as tsbigtype,
+		i.name as cljdname
+		
+		 from 
+		<include refid="tableName"></include> a  
+		left join SYS_DICTIONARIES b on a.tssource=b.DICTIONARIES_ID
+		left join SYS_DICTIONARIES f on a.tsdept=f.DICTIONARIES_ID
+		left join SYS_DICTIONARIES c on a.tslevel=c.DICTIONARIES_ID
+		left join SYS_DICTIONARIES d on a.tstype=d.DICTIONARIES_ID
+		left join SYS_DICTIONARIES e on a.tsclassify=e.DICTIONARIES_ID
+		left join SYS_DICTIONARIES g on d.parent_id=g.DICTIONARIES_ID
+		left join T_AREA i on a.cljd=i.AREA_CODE
+		where 
+		1=1  
+		<if test="id!= null and id!= ''">
+		  and	a.id = #{id}
+		</if>
+		<if test="proc_id!= null and proc_id!= ''">
+			and a.proc_id = #{proc_id}
+		</if>
+	</select>
+	
+	<select id="gettxbm" parameterType="pd" resultType="pd" statementType="CALLABLE">
+		{call pTX_CX(#{starttime,mode=IN}
+					,#{endtime,mode=IN})}
+	</select>
+	<select id="gettxdl" parameterType="pd" resultType="pd" statementType="CALLABLE">
+		{call pTX_DL(#{starttime,mode=IN}
+		,#{endtime,mode=IN}
+		,#{tsdept,mode=IN})}
+	</select>
+	<select id="gettxxl" parameterType="pd" resultType="pd" statementType="CALLABLE">
+		{call pTX_XL(#{starttime,mode=IN}
+		,#{endtime,mode=IN}
+		,#{tsdept,mode=IN})}
+	</select>
+	<select id="getbigtype" resultType="pd" parameterType="pd">
+		SELECT a.*
+		FROM sys_dictionaries a,(SELECT * FROM sys_dictionaries WHERE NAME_EN = 'tsbigtype') b
+		WHERE b.DICTIONARIES_ID = a.PARENT_ID
+	</select>
+	<select id="getsmalltype" resultType="pd" parameterType="pd">
+		SELECT a.*
+		FROM sys_dictionaries a,(SELECT * FROM sys_dictionaries WHERE NAME_EN = 'tstypename') b
+		WHERE b.DICTIONARIES_ID = a.PARENT_ID
+	</select>
+	<select id="getjybm" parameterType="pd" resultType="pd" statementType="CALLABLE">
+		{call pJY_BM(#{starttime,mode=IN}
+		,#{endtime,mode=IN})}
+	</select>
+	<select id="getjydl" parameterType="pd" resultType="pd" statementType="CALLABLE">
+		{call pJY_DL(#{starttime,mode=IN}
+		,#{endtime,mode=IN}
+		,#{tsdept,mode=IN})}
+	</select>
+	<select id="getjyxl" parameterType="pd" resultType="pd" statementType="CALLABLE">
+		{call pJY_XL(#{starttime,mode=IN}
+		,#{endtime,mode=IN}
+		,#{tsdept,mode=IN})}
+	</select>
+</mapper>

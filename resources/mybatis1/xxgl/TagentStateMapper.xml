@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TagentStateMapper">
+
+	<resultMap type="TagentState" id="tagentStateResultMap">
+		<result column="AGENTEID" property="AGENTEID"/>
+		<result column="AGENTNAME" property="AGENTNAME"/>
+		<result column="STATE" property="STATE"/>
+		<result column="UTIME" property="UTIME"/>
+		<result column="JTL" property="JTL"/>
+		<result column="CALLNUM" property="CALLNUM"/>
+		<result column="GETNUM" property="GETNUM"/>
+	</resultMap>
+	
+	<!-- 判断用户名和密码 -->
+	<select id="tagentStatelist" parameterType="page" resultType="pd">
+		
+		
+		select agentid as AGENTEID,AGENTNAME,STATE,ROUND(TO_NUMBER(sysdate - updatetime) * 24 * 60 * 60) as UTIME,
+		 nvl(b.cnt,0) as JTL from TAGENTSTATE a,(select count(*) cnt,zxid from tthjl_zxjtls where rq=#{pd.dqrq}
+		 group by zxid) b where a.agenttype=1 and a.agentid = b.zxid(+) order by agentid
+	</select>
+	
+	<select id="tagentStatehclist" parameterType="page" resultType="pd">
+		select agentid as AGENTEID,AGENTNAME,STATE,ROUND(TO_NUMBER(sysdate - updatetime) * 24 * 60 * 60) as UTIME, nvl(b.cnt,0) CALLNUM, nvl(c.cnt,0) GETNUM from TAGENTSTATE a,
+		(select count(*) cnt,zxry from tthjl where rq=#{pd.dqrq} and thfx=1 group by zxry) b,
+		(select count(*) cnt,zxid from tthjl_zxjtls where rq=#{pd.dqrq} and thfx=1 group by zxid)c where a.agenttype = 2 and a.agentid = b.zxry(+) and a.agentid = c.zxid(+)
+		order by agentid
+	</select>
+	
+	<!--判断编号是否存在 通过ID获取数据 -->
+	<select id="findCallNum" parameterType="pd" resultType="String">
+		select count(*) as callnum from tthjl where rq=#{dqrq} and thfx=1
+	</select>
+	
+	<select id="findGetNum" parameterType="pd" resultType="String">
+		select count(*) as getnum from tthjl_zxjtls  where rq=#{dqrq} and thfx=1
+	</select>
+	
+</mapper>

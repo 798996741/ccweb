@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="WorkTaskMapper">
+
+    <select id="findAlllistPage" resultType="pd" parameterType="page">
+		SELECT
+		id,
+		telnum,
+		teltime,
+		message,
+		type,
+		result,
+		class,
+		userid,
+		ip,
+		czman,
+		DATE_FORMAT(czdate,'%Y-%m-%d %H:%i:%s') czdate,
+		hwlsh,
+		uid,
+		ucid,
+		(select  concat(concat(concat((select param_value from sys_param where param_code='TelMsgSvr'),DATE_FORMAT(tr.lysj,'%Y-%m-%d')),'/'),tr.lywj)  from trecord tr where task.hwlsh=tr.hwlsh and task.hwlsh!='-1') lywjurl
+		FROM t_worktask task WHERE 1=1
+		<if test="pd.starttime!=null and pd.starttime!='' and pd.endtime!=null and pd.endtime!=''">
+			and teltime BETWEEN #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.telnum != null and pd.telnum != ''">
+			and telnum=#{pd.telnum}
+		</if>
+		<if test="pd.class != null and pd.class != ''">
+			and class=#{pd.class}
+		</if>
+		<if test="pd.userid != null and pd.userid != ''">
+			and userid=#{pd.userid}
+		</if>
+		<if test="pd.type != null and pd.type != ''">
+			and type=#{pd.type}
+		</if>
+		order by id desc
+	</select>
+
+	<select id="findWorkTaskByid" parameterType="pd" resultType="pd">
+		SELECT * FROM T_WORKTASK WHERE id=#{id}
+	</select>
+
+    <insert id="insertWorkTask" parameterType="pd">
+		INSERT INTO T_WORKTASK(
+		telnum,
+		teltime,
+		message,
+		type,
+		result,
+		class,
+		userid,
+		czman,
+		czdate,
+		uid,
+		ucid,
+		hwlsh
+		)VALUES (
+		#{telnum},
+		#{teltime},
+		#{message},
+		#{type},
+		#{result},
+		#{class},
+		#{userid},
+		#{czman},
+		#{czdate},
+		#{uid},
+		#{ucid},
+		#{hwlsh}
+		)
+	</insert>
+
+	<update id="updateWorkTask" parameterType="pd">
+		UPDATE T_WORKTASK
+		SET
+		telnum=#{telnum},
+		teltime=#{teltime},
+		message=#{message},
+		type=#{type},
+		result=#{result},
+		class=#{class},
+		userid=#{userid},
+		czman=#{czman},
+		hwlsh=#{hwlsh},
+		uid=#{uid},
+		ucid=#{ucid},
+		czdate=#{czdate}
+		WHERE id=#{id}
+	</update>
+
+    <delete id="deleteWorkTask" parameterType="pd">
+		DELETE FROM T_WORKTASK WHERE id=#{id}
+	</delete>
+</mapper>

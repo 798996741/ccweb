@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CommonMapper">
+
+    <select id="findAlllistPage" resultType="pd" parameterType="page">
+		SELECT * FROM t_custom WHERE 1=1
+		<if test="pd.place!='' and pd.place!=null">
+			AND place=#{pd.place}
+		</if>
+		<if test="pd.name!='' and pd.name!=null">
+			AND name=#{pd.name}
+		</if>
+		<if test="pd.phone!='' and pd.phone!=null">
+			AND phone LIKE CONCAT(CONCAT('%', #{pd.phone}),'%')
+		</if>
+		<if test="pd.idcard!='' and pd.idcard!=null">
+			AND idcard=#{pd.idcard}
+		</if>
+		<if test="pd.cardtype!='' and pd.cardtype!=null">
+			AND cardtype=#{pd.cardtype}
+		</if>
+		<if test="pd.keywords != null and pd.keywords != ''">
+			AND (
+			name LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			phone LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			age LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			sex LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			cardtype LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			idcard LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			type LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			address LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			)
+		</if>
+		order by id desc
+	</select>
+
+	<select id="findCommonByid" parameterType="pd" resultType="pd">
+		SELECT * FROM t_custom WHERE id=#{id}
+	</select>
+
+    <insert id="insertCommon" parameterType="pd">
+		INSERT INTO t_custom(
+		id,
+		name,
+		phone,
+		age,
+		sex,
+		cardtype,
+		idcard,
+		type,
+		address,
+		uid
+		)VALUES (
+		#{id},
+		#{name},
+		#{phone},
+		#{age},
+		#{sex},
+		#{cardtype},
+		#{idcard},
+		#{type},
+		#{address},
+		#{uid}
+		)
+	</insert>
+
+	<update id="updateCommon" parameterType="pd">
+		UPDATE t_custom
+		SET
+		name=#{name},
+		phone=#{phone},
+		age=#{age},
+		sex=#{sex},
+		cardtype=#{cardtype},
+		idcard=#{idcard},
+		type=#{type},
+		address=#{address}
+		WHERE id=#{id}
+	</update>
+
+    <delete id="deleteCommon" parameterType="String">
+		DELETE FROM t_custom where
+		id in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+
+	<select id="adviInfolistPage" parameterType="page" resultType="pd">
+		SELECT * FROM T_CONSULT WHERE FIND_IN_SET(phone,#{pd.phone})
+		<if test="pd.starttime!='' and pd.starttime!=null and pd.endtime!='' and pd.endtime!=null">
+			AND time BETWEEN #{pd.starttime} AND #{pd.endtime}
+		</if>
+	</select>
+
+	<select id="complainInfolistPage" parameterType="page" resultType="pd">
+		SELECT
+		a.id,
+		DATE_FORMAT(a.tsdate,'%Y-%m-%d %H:%m:%s') as tsdate,
+		a.type,
+		a.tscont,
+		a.tstel,
+		d.name AS tstypename,
+		e.name AS tsclassifyname,
+		f.name AS tsdeptname,
+		g.name AS tsbigtype
+
+		FROM
+		t_workorder a
+		LEFT JOIN SYS_DICTIONARIES b ON a.tssource=b.DICTIONARIES_ID
+		LEFT JOIN t_area f ON FIND_IN_SET(f.area_code,a.tsdept)
+		LEFT JOIN SYS_DICTIONARIES d ON a.tstype=d.DICTIONARIES_ID
+		LEFT JOIN SYS_DICTIONARIES e ON a.tsclassify=e.DICTIONARIES_ID
+		LEFT JOIN SYS_DICTIONARIES g ON d.parent_id=g.DICTIONARIES_ID
+		WHERE FIND_IN_SET(tstel,#{pd.phone})
+		<if test="pd.starttime!='' and pd.starttime!=null and pd.endtime!='' and pd.endtime!=null">
+			AND tsdate BETWEEN #{pd.starttime} AND #{pd.endtime}
+		</if>
+		<if test="pd.keywords!= null and pd.keywords != ''">
+			AND
+			(
+			a.id LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			a.tsdate LIKE binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			a.type LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			a.tscont LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			d.name LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			e.name LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			f.name LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			g.name LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			)
+		</if>
+		order by id desc
+	</select>
+</mapper>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="fileMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		t_file
+	</sql>
+	
+	
+	<!-- 新增-->
+	<insert id="saveFile" parameterType="pd">
+		insert into 
+		t_file
+		(
+		uid,file,name,ext,createman,createdate,filename,uuid,type
+		) values (
+		#{uid},#{file},#{name},#{ext},#{createman},now(),#{filename},#{uuid},#{type}
+		)
+	</insert>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteFile" parameterType="String">
+		delete from
+			t_file
+		where 
+			uuid =#{uuid}
+	</delete>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAllFile" parameterType="String">
+		delete from t_file
+		where 
+			find_in_set(uuid,#{id})
+	</delete>
+	
+	<!-- 通过id获取数据 -->
+	<select id="findFileByuid" parameterType="pd" resultType="pd">
+		select 
+			a.*
+		 from 
+		 t_file a
+		where 1=1
+			<if test="uid!= null and uid != ''"> 
+			 and uid = #{uid}
+			</if>
+			<if test="type!= null and type != ''">
+				and type=#{type}
+			</if>
+	</select>
+	
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		
+		select 
+			a.*,
+			d.zxxm as createmanName
+		 from 
+		 t_file a
+		 left join tzxlb d on a.createman=d.zxyh
+		where 1=1
+			<if test="pd.uid!= null and pd.uid != ''"> 
+			 	and uid = #{pd.uid}
+			</if>
+			<if test="pd.type!= null and pd.type != ''">
+				and type=#{pd.type}
+			</if>
+			<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+					name LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or 
+					filename LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or
+					ext LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					
+				)
+			</if>
+			
+			<if test="pd.name!= null and pd.name != ''"><!-- 关键词检索 -->
+			and name LIKE CONCAT(CONCAT('%', #{pd.name}),'%')
+			</if>
+			<if test="pd.filename!= null and pd.filename != ''"><!-- 关键词检索 -->
+			and filename LIKE CONCAT(CONCAT('%', #{pd.filename}),'%')
+			</if>
+		order by createdate desc
+	</select>
+	
+	<!-- 通过id获取数据 -->
+	<select id="findFileById" parameterType="pd" resultType="pd">
+		select 
+			*
+		 from 
+		 t_file
+		where 
+			uuid = #{uuid}
+			<if test="type!= null and type != ''">
+				and find_in_set(a.type,#{type})
+			</if>
+	</select>
+	
+	
+
+	
+	
+</mapper>

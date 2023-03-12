@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+<entry key="app_preset_prof_preset_name">Createactiviti Launch Configuration</entry>
+<entry key="app_preset_prof_preset_filter_s"/>
+<entry key="app_preset_prof_preset_filter_p">com.activitest.*,
+com.fh.controller.activiti.*,
+com.fh.controller.app.appuser.*,
+com.fh.controller.app.redis.*,
+com.fh.controller.app.sysuser.*,
+com.fh.controller.base.*,
+com.fh.controller.system.appuser.*,
+com.fh.controller.system.areamanage.*,
+com.fh.controller.system.dictionaries.*,
+com.fh.controller.system.login.*,
+com.fh.controller.system.menu.*,
+com.fh.controller.system.role.*,
+com.fh.controller.system.secCode.*,
+com.fh.controller.system.user.*,
+com.fh.dao.*,
+com.fh.entity.*,
+com.fh.filter.*,
+com.fh.interceptor.*,
+com.fh.listener.*,
+com.fh.plugin.*,
+com.fh.resolver.*,
+com.fh.service.activiti.fhmodel.*,
+com.fh.service.activiti.hiprocdef.*,
+com.fh.service.activiti.procdef.*,
+com.fh.service.activiti.ruprocdef.*,
+com.fh.service.areamanage.*,
+com.fh.service.fhoa.myleave.*,
+com.fh.service.system.appuser.*,
+com.fh.service.system.dictionaries.*,
+com.fh.service.system.fhlog.*,
+com.fh.service.system.fhsms.*,
+com.fh.service.system.menu.*,
+com.fh.service.system.role.*,
+com.fh.service.system.user.*,
+com.fh.util.*,
+com.xxgl.controller.*,
+com.xxgl.entity.*,
+com.xxgl.service.*,
+com.xxgl.utils.*,
+com.yushen.allocationAlgorithm.*</entry>
+<entry key="app_preset_prof_preset_alloc_p">10</entry>
+<entry key="app_preset_"/>
+<entry key="app_preset_prof_preset_samplingRefreshRate_s">1000</entry>
+<entry key="app_preset_prof_preset_stacks_p">false</entry>
+<entry key="app_preset_prof_preset_roots_p">com.activitest.**
+com.fh.controller.activiti.**
+com.fh.controller.app.appuser.**
+com.fh.controller.app.redis.**
+com.fh.controller.app.sysuser.**
+com.fh.controller.base.**
+com.fh.controller.system.appuser.**
+com.fh.controller.system.areamanage.**
+com.fh.controller.system.dictionaries.**
+com.fh.controller.system.login.**
+com.fh.controller.system.menu.**
+com.fh.controller.system.role.**
+com.fh.controller.system.secCode.**
+com.fh.controller.system.user.**
+com.fh.dao.**
+com.fh.entity.**
+com.fh.filter.**
+com.fh.interceptor.**
+com.fh.listener.**
+com.fh.plugin.**
+com.fh.resolver.**
+com.fh.service.activiti.fhmodel.**
+com.fh.service.activiti.hiprocdef.**
+com.fh.service.activiti.procdef.**
+com.fh.service.activiti.ruprocdef.**
+com.fh.service.areamanage.**
+com.fh.service.fhoa.myleave.**
+com.fh.service.system.appuser.**
+com.fh.service.system.dictionaries.**
+com.fh.service.system.fhlog.**
+com.fh.service.system.fhsms.**
+com.fh.service.system.menu.**
+com.fh.service.system.role.**
+com.fh.service.system.user.**
+com.fh.util.**
+com.xxgl.controller.**
+com.xxgl.entity.**
+com.xxgl.service.**
+com.xxgl.utils.**
+com.yushen.allocationAlgorithm.**
+</entry>
+<entry key="profiler.settings.instrument.empty.methods">false</entry>
+<entry key="myeclipse.profiling.mode">0</entry>
+<entry key="profiler.settings.istrument.getter.setter.methods">false</entry>
+<entry key="app_preset_prof_preset_samplingRate_s">100</entry>
+<entry key="app_preset_prof_preset_filterMode_s">true</entry>
+<entry key="app_preset_prof_preset_selector"/>
+<entry key="app_preset_prof_preset_refreshRate_s">1000</entry>
+<entry key="app_preset_prof_preset_runnables_p">true</entry>
+<entry key="app_preset_prof_preset_filterMode_p">false</entry>
+<entry key="app_preset_prof_preset_memoryMode_p">true</entry>
+</properties>

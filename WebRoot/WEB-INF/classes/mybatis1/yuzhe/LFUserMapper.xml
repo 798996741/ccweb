@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="lfUserMapper">
+
+    <select id="findUserByOpenId" parameterType="pd" resultType="pd">
+        SELECT id,zxid,zxxm,tel,tokenid FROM tzxlb
+        <where>
+            open_id  IS NOT NULL AND open_id != 'null'
+            <if test="openId != null and openId != ''">
+                and open_id = #{openId}
+            </if>
+        </where>
+        limit 1
+    </select>
+
+    <select id="findUserByup" parameterType="pd" resultType="pd">
+        SELECT id,zxid,zxxm,tel,tokenid FROM tzxlb
+        <where>
+            <if test="userName != null and userName != '' and password != null and password != ''">
+                zxid = #{userName} and pwd = #{password}
+            </if>
+        </where>
+        limit 1
+    </select>
+    <update id="updateOpenId" parameterType="pd">
+        <if test="id != null and id != '' and openId != null and openId != ''">
+            UPDATE tzxlb SET open_id = #{openId}
+             <if test="tokenId != null and tokenId != ''">
+                 ,tokenid = #{tokenId}
+             </if>
+             WHERE id = #{id}
+        </if>
+    </update>
+
+ </mapper>

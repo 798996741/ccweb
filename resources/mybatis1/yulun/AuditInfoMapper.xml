@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AuditInfoMapper">
+
+    <select id="findAlllistPage" resultType="pd" parameterType="page">
+		SELECT * FROM t_auditinfo where 1=1
+		<if test="pd.starttime!=null and pd.starttime!='' and pd.endtime!=null and pd.endtime!=''">
+			and cztime BETWEEN #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.result!=null and pd.result!=''">
+			AND result=#{pd.result}
+		</if>
+		<if test="pd.name!=null and pd.name!=''">
+			AND name=#{pd.name}
+		</if>
+		order by id desc
+	</select>
+
+	<select id="findAuditByid" parameterType="pd" resultType="pd">
+		SELECT * FROM t_auditinfo a,t_vipinfo b WHERE a.id=#{id} AND b.id=a.infoid
+	</select>
+
+    <insert id="insertAuditInfo" parameterType="pd">
+		INSERT INTO t_auditinfo(
+		name,
+		sex,
+		idcard,
+		recepdep,
+		clevel,
+		birthday,
+		position,
+		place,
+		waiter,
+		isimport,
+		isusecard,
+		ortherinfo,
+		ctype,
+		favorite,
+		auditno,
+		czman,
+		cztime,
+		audittime,
+		auditor,
+		result,
+		type,
+		reason,
+		infoid
+		)VALUES (
+		#{name},
+		#{sex},
+		#{idcard},
+		#{recepdep},
+		#{clevel},
+		#{birthday},
+		#{position},
+		#{place},
+		#{waiter},
+		#{isimport},
+		#{isusecard},
+		#{ortherinfo},
+		#{ctype},
+		#{favorite},
+		#{auditno},
+		#{czman},
+		#{cztime},
+		#{audittime},
+		#{auditor},
+		#{result},
+		#{type},
+		#{reason},
+		#{infoid}
+		)
+	</insert>
+
+	<update id="updateAuditInfo" parameterType="pd">
+		UPDATE t_auditinfo
+		SET
+		name=#{name},
+		sex=#{sex},
+		idcard=#{idcard},
+		recepdep=#{recepdep},
+		clevel=#{clevel},
+		birthday=#{birthday},
+		position=#{position},
+		place=#{place},
+		waiter=#{waiter},
+		isimport=#{isimport},
+		isusecard=#{isusecard},
+		ortherinfo=#{ortherinfo},
+		ctype=#{ctype},
+		favorite=#{favorite},
+		auditno=#{auditno},
+		czman=#{czman},
+		cztime=#{cztime},
+		audittime=#{audittime},
+		auditor=#{auditor},
+		result=#{result},
+		reason=#{reason},
+		type=#{type},
+		infoid=#{infoid}
+		WHERE id=#{id}
+	</update>
+
+	<update id="updateAuditByInfoid" parameterType="pd">
+		UPDATE t_auditinfo
+		SET
+		name=#{name},
+		sex=#{sex},
+		idcard=#{idcard},
+		recepdep=#{recepdep},
+		clevel=#{clevel},
+		birthday=#{birthday},
+		position=#{position},
+		place=#{place},
+		waiter=#{waiter},
+		isimport=#{isimport},
+		isusecard=#{isusecard},
+		ortherinfo=#{ortherinfo},
+		ctype=#{ctype},
+		favorite=#{favorite},
+		auditno=#{auditno},
+		czman=#{czman},
+		cztime=#{cztime},
+		audittime=#{audittime},
+		auditor=#{auditor},
+		result=#{result},
+		reason=#{reason},
+		type=#{type}
+		WHERE infoid=#{infoid}
+	</update>
+
+	<update id="updateResult" parameterType="pd">
+		UPDATE t_auditinfo
+		SET
+		result=#{result}
+		WHERE id=#{id}
+	</update>
+
+    <delete id="deleteAuditInfo" parameterType="pd">
+		DELETE FROM t_auditinfo WHERE id=#{id}
+	</delete>
+
+	<select id="getMaxAuditno" parameterType="pd" resultType="pd">
+		select max(auditno) as maxauditno from t_auditinfo WHERE auditno LIKE CONCAT(CONCAT(#{keywords}),'%')
+	</select>
+</mapper>

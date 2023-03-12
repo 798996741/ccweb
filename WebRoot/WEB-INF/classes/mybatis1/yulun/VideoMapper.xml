@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="VideoMapper">
+    <!--列表-->
+    <select id="videolistPage" parameterType="page" resultType="pd">
+        select a.id,a.hwlsh,DATE_FORMAT(a.kssj,"%Y-%m-%d %T") as kssj,DATE_FORMAT(a.jssj,"%Y-%m-%d %T") as
+        jssj,a.thsj,a.zxid,a.url,(case a.thfx when a.thfx='0' then '呼入'
+        when a.thfx='1' then '呼出' else '' end) thfx
+        from tthjl a
+        inner join tzxlb b
+        on a.zxid=b.zxid
+        where a.thlx=3
+        and b.dept=#{pd.dept}
+        and a.isshow=1
+        <if test="pd.starttime!=null and pd.starttime!=''"><!-- 开始时间检索 -->
+            and a.kssj &gt;= #{pd.starttime}
+        </if>
+        <if test="pd.endtime!=null and pd.endtime!=''"><!-- 结束时间检索 -->
+            and a.kssj &lt;= #{pd.endtime}
+        </if>
+        <if test="pd.zxid!= null and pd.zxid!= ''"><!-- 坐席检索 -->
+            and a.zxid=#{pd.zxid}
+        </if>
+        <if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+            and (
+            a.kssj LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+            or
+            a.jssj LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+            or
+            a.thsj LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+            or
+            a.zxid LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+
+        </if>
+
+        order by a.kssj desc
+    </select>
+
+    <!-- 批量删除 -->
+    <update id="delVideoAll" parameterType="String">
+        update tthjl
+        set
+            isshow=0
+        where
+        id in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

@@ -1,0 +1,294 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OperateLogMapper">
+
+	<!--表名 -->
+	<sql id="tableName">
+		t_operate_log
+	</sql>
+
+	<!-- 字段 -->
+	<sql id="Field">
+		ID,
+		TYPE,
+		MAPPERNAME,
+		LOGSQL,
+		OPERATEDATE,
+		OPERATESTR,
+		IP,
+		OPERATEMAN,
+		systype
+	</sql>
+
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{ID},
+		#{TYPE},
+		#{MAPPERNAME},
+		#{SQL},
+		#{OPERATEDATE},
+		#{OPERATESTR},
+		#{IP},
+		#{OPERATEMAN},
+		#{systype}
+	</sql>
+
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into
+		<include refid="tableName"></include>
+		(
+		ID,
+		TYPE,
+		MAPPERNAME,
+		LOGSQL,
+		OPERATEDATE,
+		OPERATESTR,
+		OPERATEMAN,
+		IP,
+		systype
+		) values (
+		#{ID},
+		#{TYPE},
+		#{MAPPERNAME},
+		#{SQL},
+		#{OPERATEDATE},
+		#{OPERATESTR},
+		#{OPERATEMAN},
+		#{IP},
+		#{systype}
+		)
+	</insert>
+<insert id="lostandfoundSave" parameterType="pd">
+		insert into
+			lostandfound_operate_log
+		(
+		ID,
+		TYPE,
+		MAPPERNAME,
+		LOGSQL,
+		OPERATEDATE,
+		OPERATESTR,
+		OPERATEMAN,
+		IP,
+		systype
+		) values (
+		#{ID},
+		#{TYPE},
+		#{MAPPERNAME},
+		#{SQL},
+		#{OPERATEDATE},
+		#{OPERATESTR},
+		#{OPERATEMAN},
+		#{IP},
+		#{systype}
+		)
+	</insert>
+
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select c.*,d.modulename,d.remarks from (
+			select a.id,DATE_FORMAT(a.operatedate,"%Y-%m-%d %T") as operatedate,a.ip,a.operateman,a.type,a.logsql,a.operatestr,a.systype,a.mappername,c.zxid,b.name,b.DWBM,b.USERNAME as zxyh from t_operate_log a left join sys_user b on a.OPERATEMAN=b.USERNAME 
+			left join tzxlb c on a.OPERATEMAN=c.zxyh where systype='1'
+			union ALL
+		select  a.id,DATE_FORMAT(a.operatedate,"%Y-%m-%d %T") as operatedate,a.ip,a.operateman,a.type,a.logsql,a.operatestr,a.systype,a.mappername,c.zxid,b.name,c.dept as DWBM,c.zxyh from t_operate_log a left join sys_user b on a.OPERATEMAN=b.USERNAME 
+			left join tzxlb c on (a.OPERATEMAN=c.zxyh or a.OPERATEMAN=c.zxid) where systype='2' or systype='3' 
+		) c left join t_operlog_menu_name d on c.mappername=d.mappername
+
+		where 1=1
+		<if test="pd.mappername != null and pd.mappername != ''">
+			and c.mappername = #{pd.mappername}
+		</if>
+		<if test="pd.modulename != null and pd.modulename != ''">
+			and d.modulename = #{pd.modulename}
+		</if>
+		<if test="pd.type != null and pd.type != ''">
+			and c.type = #{pd.TYPE}
+		</if>
+		<if test="pd.zxid != null and pd.zxid!= ''">
+			and c.zxid = #{pd.zxid}
+		</if>
+		<if test="pd.starttime != null and pd.starttime != ''">
+			and c.OPERATEDATE &gt;= #{pd.starttime}
+		</if>
+		<if test="pd.endtime != null and pd.endtime != ''">
+			and c.OPERATEDATE &lt;=#{pd.endtime}
+		</if>
+		<if test="pd.dwbm != null and pd.dwbm!= ''">
+			and c.dwbm  LIKE CONCAT(#{pd.dwbm},'%')
+		</if>
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+			(
+			c.MAPPERNAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			or
+			OPERATEMAN LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			or
+			c.operatestr LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			)
+		</if>
+		order by OPERATEDATE desc
+	</select>
+	<select id="operateLoglistPage" parameterType="page" resultType="pd">
+		select c.*,d.modulename,d.remarks from (
+			select a.id,DATE_FORMAT(a.operatedate,"%Y-%m-%d %T") as operatedate,a.ip,a.operateman,a.type,a.logsql,a.operatestr,a.systype,a.mappername,c.zxid,b.name,b.DWBM,b.USERNAME as zxyh from lostandfound_operate_log a left join sys_user b on a.OPERATEMAN=b.USERNAME
+			left join tzxlb c on a.OPERATEMAN=c.zxyh where systype='1'
+			union ALL
+		select  a.id,DATE_FORMAT(a.operatedate,"%Y-%m-%d %T") as operatedate,a.ip,a.operateman,a.type,a.logsql,a.operatestr,a.systype,a.mappername,c.zxid,b.name,c.dept as DWBM,c.zxyh from lostandfound_operate_log a left join sys_user b on a.OPERATEMAN=b.USERNAME
+			left join tzxlb c on (a.OPERATEMAN=c.zxyh or a.OPERATEMAN=c.zxid) where systype='2' or systype='3'
+		) c left join t_operlog_menu_name d on c.mappername=d.mappername where 1=1
+		<if test="pd.mappername != null and pd.mappername != ''">
+			and c.mappername = #{pd.mappername}
+		</if>
+		<if test="pd.modulename != null and pd.modulename != ''">
+			and d.modulename = #{pd.modulename}
+		</if>
+		<if test="pd.type != null and pd.type != ''">
+			and c.type = #{pd.TYPE}
+		</if>
+		<if test="pd.zxid != null and pd.zxid!= ''">
+			and c.zxid = #{pd.zxid}
+		</if>
+		<if test="pd.starttime != null and pd.starttime != ''">
+			and c.OPERATEDATE &gt;= #{pd.starttime}
+		</if>
+		<if test="pd.endtime != null and pd.endtime != ''">
+			and c.OPERATEDATE &lt;=#{pd.endtime}
+		</if>
+		<if test="pd.dwbm != null and pd.dwbm!= ''">
+			and c.dwbm  LIKE CONCAT(#{pd.dwbm},'%')
+		</if>
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+			(
+			c.MAPPERNAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			or
+			OPERATEMAN LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			or
+			c.operatestr LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			)
+		</if>
+		order by OPERATEDATE desc
+	</select>
+
+	<select id="getFieldsByName" parameterType="String" resultType="pd">
+	
+		select
+		     column_name as COLUMN_NAME
+		    ,data_type
+		    ,CHARACTER_MAXIMUM_LENGTH
+		    ,column_type as TYPE
+		    ,column_comment as COMMENTS
+		from information_schema.columns
+		where TABLE_SCHEMA ='ccweb'
+		    and TABLE_NAME =  #{TABLENAME}
+		order by ORDINAL_POSITION
+
+	</select>
+
+	<select id="getModuleName" parameterType="String" resultType="pd">
+		select
+			*
+		from
+	    	T_OPERLOG_MENU_NAME
+		where 1=1
+		and MAPPERNAME = #{MAPPERNAME}
+	</select>
+
+	<select id="getModules" parameterType="pd" resultType="pd">
+		select
+			*
+		from
+	    	T_OPERLOG_MENU_NAME
+		where 1=1
+	</select>
+
+
+	<select id="findModuleById" parameterType="pd" resultType="pd">
+		select
+			*
+		from
+	    	${TABLENAME}
+	    where
+	        ${COLUMN}=#{ID}
+	</select>
+
+	<!-- 新增 模块日志配置信息-->
+	<insert id="saveModuleMenu" parameterType="pd">
+		insert into
+		T_OPERLOG_MENU_NAME
+		(
+		  ID,MAPPERNAME,TABLENAME,REMARKS,MODULENAME
+		) values (
+		  #{ID},#{MAPPERNAME},#{TABLENAME},#{REMARKS},#{MODULENAME}
+		)
+	</insert>
+
+	<!-- 删除 模块日志配置信息-->
+	<delete id="deleteModuleMenu" parameterType="pd">
+		delete from
+		T_OPERLOG_MENU_NAME
+		where
+		ID = #{ID}
+	</delete>
+
+	<!-- 修改 模块日志配置信息-->
+	<update id="editModuleMenu" parameterType="pd">
+		update
+			T_OPERLOG_MENU_NAME
+		set
+			MAPPERNAME = #{MAPPERNAME},
+			TABLENAME = #{TABLENAME},
+			REMARKS = #{REMARKS},
+			MODULENAME = #{MODULENAME}
+		where
+			ID = #{ID}
+	</update>
+
+	<!-- 查询 模块日志配置信息-->
+	<select id="findModuleMenuById" parameterType="pd" resultType="pd">
+		select * from
+		T_OPERLOG_MENU_NAME
+		where
+		ID = #{ID}
+	</select>
+
+	<!-- 列表 -->
+	<select id="moduleMenulistPage" parameterType="page" resultType="pd">
+		select
+			*
+		from
+			T_OPERLOG_MENU_NAME
+		where 1=1
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+			(
+			MAPPERNAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			or
+			TABLENAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			or
+			REMARKS LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			or
+			MODULENAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			)
+		</if>
+	</select>
+	
+	
+	<!-- 列表 -->
+	<select id="modulelistGroupByModulename" parameterType="page" resultType="pd">
+		select
+			modulename
+		from
+			T_OPERLOG_MENU_NAME
+		where 1=1
+		
+		<if test="isfront != null and isfront != '' and isfront != 'all'">
+			and isfront = #{isfront}
+		</if>
+		group by modulename
+	</select>
+	
+	
+
+</mapper>

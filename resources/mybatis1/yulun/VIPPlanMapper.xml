@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="VIPPlanMapper">
+
+    <select id="findVipPlanAlllistPage" resultType="pd" parameterType="page">
+		SELECT
+		b.*,
+		CONVERT (c.linkname USING utf8) AS linkname,
+		a.*
+		FROM t_vipplan b LEFT JOIN  t_flight a ON a.inflightnum=b.lineno LEFT JOIN
+		(SELECT vipplanid,GROUP_CONCAT(oordername) AS linkname FROM t_orderinfo GROUP BY vipplanid) c
+		ON c.vipplanid=b.id where 1=1
+		<if test="pd.starttime!=null and pd.starttime!='' and pd.endtime!=null and pd.endtime!=''">
+			and date BETWEEN #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.linecate!=null and pd.linecate!=''">
+			AND linecate=#{pd.linecate}
+		</if>
+		<if test="pd.vipid!=null and pd.vipid!=''">
+			AND vipid=#{pd.vipid}
+		</if>
+		<if test="pd.servtype!=null and pd.servtype!=''">
+			AND servtype=#{pd.servtype}
+		</if>
+		<if test="pd.name!=null and pd.name!=''">
+			AND b.name=#{pd.name}
+		</if>
+		<if test="pd.keywords != null and pd.keywords != ''">
+		  AND (b.no LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.date LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.name LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.position LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.isimport LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.recman LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.recchara LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.cardno LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.money LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.contact LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.phone LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.ordername LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.ordertel LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.meetnum LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.follownum LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.guestnum LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.paymet LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.boxtype LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.isseat LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.iseat LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.eatnum LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.viproom LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.carno LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.lineno LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.linecate LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.line LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.isvipcar LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.vipcarin LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.need LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.waiter LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.consumemon LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.reseat LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')OR
+			b.vipcar LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.userid LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.username LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			)
+
+		</if>
+		order by b.czdate desc
+	</select>
+
+	<select id="findVipplanByid" parameterType="pd" resultType="pd">
+		SELECT * FROM t_vipplan WHERE id=#{id}
+	</select>
+	
+	<select id="findOrderinfoByVipplanidlistPage" parameterType="page" resultType="pd">
+		SELECT * FROM t_orderinfo WHERE vipplanid=#{pd.vipplanid}
+	</select>
+
+    <insert id="insertVipplan" parameterType="pd">
+		INSERT INTO t_vipplan(
+		id,
+		no,
+		date,
+		type,
+		name,
+		position,
+		isimport,
+		recman,
+		recchara,
+		cardno,
+		money,
+		contact,
+		phone,
+		ordername,
+		ordertel,
+		meetnum,
+		follownum,
+		guestnum,
+		paymet,
+		boxtype,
+		isseat,
+		iseat,
+		eatnum,
+		viproom,
+		carno,
+		lineno,
+		linecate,
+		line,
+		isvipcar,
+		vipcarin,
+		need,
+		waiter,
+		consumemon,
+		reseat,
+		vipcar,
+		userid,
+		username,
+		servtype,
+		czdate,
+		czman
+		)VALUES (
+		#{id},
+		#{no},
+		#{date},
+		#{type},
+		#{name},
+		#{position},
+		#{isimport},
+		#{recman},
+		#{recchara},
+		#{cardno},
+		#{money},
+		#{contact},
+		#{phone},
+		#{ordername},
+		#{ordertel},
+		#{meetnum},
+		#{follownum},
+		#{guestnum},
+		#{paymet},
+		#{boxtype},
+		#{isseat},
+		#{iseat},
+		#{eatnum},
+		#{viproom},
+		#{carno},
+		#{lineno},
+		#{linecate},
+		#{line},
+		#{isvipcar},
+		#{vipcarin},
+		#{need},
+		#{waiter},
+		#{consumemon},
+		#{reseat},
+		#{vipcar},
+		#{userid},
+		#{username},
+		#{servtype},
+		#{czdate},
+		#{czman}
+		)
+	</insert>
+
+	<update id="updateServtype" parameterType="pd">
+		UPDATE t_vipinfo
+		SET
+		servtype=#{servtype}
+		WHERE id=#{id}
+	</update>
+
+	<update id="updateVipplan" parameterType="pd">
+		UPDATE t_vipplan
+		SET
+		no=#{no},
+		date=#{date},
+		type=#{type},
+		name=#{name},
+		position=#{position},
+		isimport=#{isimport},
+		recman=#{recman},
+		recchara=#{recchara},
+		cardno=#{cardno},
+		money=#{money},
+		contact=#{contact},
+		phone=#{phone},
+		ordername=#{ordername},
+		ordertel=#{ordertel},
+		meetnum=#{meetnum},
+		follownum=#{follownum},
+		guestnum=#{guestnum},
+		paymet=#{paymet},
+		boxtype=#{boxtype},
+		isseat=#{isseat},
+		iseat=#{iseat},
+		eatnum=#{eatnum},
+		viproom=#{viproom},
+		carno=#{carno},
+		lineno=#{lineno},
+		linecate=#{linecate},
+		line=#{line},
+		isvipcar=#{isvipcar},
+		vipcarin=#{vipcarin},
+		need=#{need},
+		waiter=#{waiter},
+		consumemon=#{consumemon},
+		reseat=#{reseat},
+		vipcar=#{vipcar},
+		userid=#{userid},
+		username=#{username}
+		WHERE id=#{id}
+	</update>
+
+    <delete id="deleteVipplan" parameterType="pd">
+		DELETE FROM t_vipplan WHERE id=#{id}
+	</delete>
+
+	<insert id="insertOrtherInfo" parameterType="pd">
+		INSERT INTO t_orderinfo(
+			oordername,
+			oidcard,
+			ounit,
+			oposition,
+			oisimport,
+			vipplanid
+			)VALUES (
+			#{oordername},
+			#{oidcard},
+			#{ounit},
+			#{oposition},
+			#{oisimport},
+			#{vipplanid}
+			)
+	</insert>
+
+	<update id="updateVipplanid" parameterType="pd">
+		UPDATE t_orderinfo
+		SET
+		vipplanid=#{vipplanid}
+		WHERE id=#{id}
+	</update>
+
+	<update id="updateOrtherInfo" parameterType="pd">
+		UPDATE t_orderinfo
+		SET
+		oordername=#{oordername},
+		oidcard=#{oidcard},
+		ounit=#{ounit},
+		oposition=#{oposition},
+		oisimport=#{oisimport},
+		vipplanid=#{vipplanid}
+		WHERE id=#{id}
+	</update>
+
+	<delete id="deleteOrtherInfo" parameterType="pd">
+		DELETE FROM t_orderinfo WHERE id=#{id}
+	</delete>
+
+	<select id="getMaxno" parameterType="pd" resultType="pd">
+		select max(no) as maxno from t_vipplan WHERE no LIKE CONCAT(CONCAT(#{keywords}),'%')
+	</select>
+</mapper>

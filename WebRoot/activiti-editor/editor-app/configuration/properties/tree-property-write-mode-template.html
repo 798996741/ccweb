@@ -1,0 +1,10 @@
+<div ng-controller="KisBpmStringPropertyCtrl">
+    <select ng-model="property.value"
+            class="form-control"
+            auto-focus
+            ng-blur="inputBlurred()"
+            ng-keypress="enterPressed($event)"
+            ng-init="initSelect()"
+            id="optList">
+    </select>
+</div>

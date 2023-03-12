@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="FinderMapper">
+
+    <delete id="deleteFinderById" parameterType="pd">
+    <if test="id != null and id != ''">
+        delete from found_finder where id in (select finder_id from lostandfound_article where id = #{id});
+    </if>
+    </delete>
+
+    <insert id="saveFinder" parameterType="pd" >
+        <selectKey keyProperty="finderId" resultType="int" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+    insert into found_finder values(null, #{finderName}, #{finderPlace},
+    #{finderTime}, #{finderTel}, now(), now(), #{finderFlightNumber} )
+    </insert>
+
+    <update id="updateFinder" parameterType="pd">
+    UPDATE found_finder SET
+    finder_name = #{finderName},
+    finder_place = #{finderPlace},
+    finder_time = #{finderTime},
+    update_time = now(),
+    finder_tel = #{finderTel},
+    finder_flightNumber = #{finderFlightNumber}
+    WHERE id = #{finderId}
+    </update>
+</mapper>

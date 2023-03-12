@@ -1,0 +1,476 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MessageMapper">
+
+	<resultMap type="com.yulun.entity.MsgTemp" id="dictResultMap">
+		<id column="id" property="id"/>
+		<result column="content" property="content"/>
+		<result column="parentid" property="parentid"/>
+		<result column="tempname" property="tempname"/>
+	</resultMap>
+
+	<select id="findMsgAlllistPage" parameterType="page" resultType="pd">
+		select * from t_msgtemp where 1=1
+		<if test="pd.userids != null and pd.userids != ''">
+			<if test="pd.userids.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="pd.userids.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},czman)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},czman)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="pd.way!=null and pd.way!=''">
+			and way=#{pd.way}
+		</if>
+		<if test="pd.phoneid!=null and pd.phoneid!=''">
+			and phoneid=#{pd.phoneid}
+		</if>
+		<if test="pd.keywords != null and pd.keywords != ''">
+			AND (
+			content LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			tempname LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			parentid LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') or
+			acceptman LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') or
+			cate LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			)
+		</if>
+		order by id desc
+	</select>
+
+	<select id="listSubDictByParentId" parameterType="String" resultMap="dictResultMap">
+		select * from t_msgtemp where parentid=#{parentid} order by id desc
+	</select>
+
+
+    <insert id="insertMagTemp" parameterType="pd">
+		INSERT INTO t_msgtemp(
+		id,
+		content,
+		parentid,
+		tempname,
+		acceptman,
+		cate,
+		phones,
+		phonesid,
+		way,
+		czman,
+		czdate
+		)VALUES (
+		#{id},
+		#{content},
+		#{parentid},
+		#{tempname},
+		#{acceptman},
+		#{cate},
+		#{phones},
+		#{phonesid},
+		#{way},
+		#{czman},
+		#{czdate}
+
+		)
+	</insert>
+
+	<update id="updateMagTemp" parameterType="pd">
+		UPDATE t_msgtemp
+		SET
+		id=#{id},
+		content=#{content},
+		parentid=#{parentid},
+		tempname=#{tempname},
+		acceptman=#{acceptman},
+		cate=#{cate},
+		phones=#{phones},
+		phonesid=#{phonesid},
+		way=#{way}
+		WHERE id=#{id}
+	</update>
+
+    <delete id="deleteMagTemp" parameterType="pd">
+		DELETE FROM t_msgtemp WHERE id=#{id}
+	</delete>
+
+	<select id="findMsgLogAlllistPage" resultType="pd" parameterType="page">
+		SELECT
+		a.id,
+		DATE_FORMAT(a.time,'%Y-%m-%d %H:%i:%s') time,
+		a.way,
+		a.temp,
+		a.content,
+		a.acceptman,
+		a.phone,
+		a.sendman,
+		DATE_FORMAT(a.sendtime,'%Y-%m-%d %H:%i:%s') sendtime,
+		a.state,
+		a.returnmsg,
+		a.cate,
+		a.phones,
+		a.phonesid,
+		b.tempname AS tempname,
+		a.uid,
+		a.ucid
+		FROM t_msglog a LEFT JOIN t_msgtemp b ON a.temp=b.id
+		WHERE 1=1
+		<if test="pd.userids != null and pd.userids != ''">
+			<if test="pd.userids.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="pd.userids.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},a.czman)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},a.czman)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="pd.starttime!=null and pd.starttime!='' and pd.endtime!=null and pd.endtime!=''">
+			and a.time BETWEEN #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.uid!=null and pd.uid!=''">
+			and a.uid=#{pd.uid}
+		</if>
+		<if test="pd.ucid!=null and pd.ucid!=''">
+			and a.ucid=#{pd.ucid}
+		</if>
+		<if test="pd.sendman!=null and pd.sendman!=''">
+			and a.sendman=#{pd.sendman}
+		</if>
+		<if test="pd.phone!=null and pd.phone!=''">
+			and a.phone=#{pd.phone}
+		</if>
+		<if test="pd.phoneid!=null and pd.phoneid!=''">
+			and a.phoneid=#{pd.phoneid}
+		</if>
+		<if test="pd.acceptman!=null and pd.acceptman!=''">
+			and FIND_IN_SET(#{pd.acceptman},a.acceptman)
+		</if>
+
+        <if test="pd.cate!=null and pd.cate!=''">
+            and a.cate=#{pd.cate}
+        </if>
+        <if test="pd.way!=null and pd.way!=''">
+            and a.way=#{pd.way}
+        </if>
+        <if test="pd.temp!=null and pd.temp!=''">
+            and a.temp=#{pd.temp}
+        </if>
+		<if test="pd.keywords != null and pd.keywords != ''">
+			AND (
+            a.time	 LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            a.way LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            a.temp LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            a.content LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            a.acceptman LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            a.phone LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            a.sendman LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			a.cate LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            a.state LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			)
+		</if>
+		order by id desc
+	</select>
+
+
+	<select id="findMsgLogAll" resultType="pd" parameterType="pd">
+		SELECT
+		a.id,
+		DATE_FORMAT(a.time,'%Y-%m-%d %H:%i:%s') time,
+		a.way,
+		a.temp,
+		a.content,
+		a.acceptman,
+		a.phone,
+		a.sendman,
+		DATE_FORMAT(a.sendtime,'%Y-%m-%d %H:%i:%s') sendtime,
+		a.state,
+		a.returnmsg,
+		a.cate,
+		a.phones,
+		a.phonesid,
+		b.tempname AS tempname,
+		a.uid,
+		a.ucid
+		FROM t_msglog a LEFT JOIN t_msgtemp b ON a.temp=b.id
+		WHERE 1=1
+		<if test="userids != null and userids != ''">
+			<if test="userids.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="userids.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},a.czman)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},a.czman)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and a.time BETWEEN #{starttime} and #{endtime}
+		</if>
+		<if test="uid!=null and uid!=''">
+			and a.uid=#{uid}
+		</if>
+		<if test="ucid!=null and ucid!=''">
+			and a.ucid=#{ucid}
+		</if>
+		<if test="sendman!=null and sendman!=''">
+			and a.sendman=#{sendman}
+		</if>
+		<if test="phone!=null and phone!=''">
+			and a.phone=#{phone}
+		</if>
+		<if test="phoneid!=null and phoneid!=''">
+			and a.phoneid=#{phoneid}
+		</if>
+		<if test="acceptman!=null and acceptman!=''">
+			and FIND_IN_SET(#{acceptman},a.acceptman)
+		</if>
+
+		<if test="cate!=null and cate!=''">
+			and a.cate=#{cate}
+		</if>
+		<if test="way!=null and way!=''">
+			and a.way=#{way}
+		</if>
+		<if test="temp!=null and temp!=''">
+			and a.temp=#{temp}
+		</if>
+		<if test="keywords != null and keywords != ''">
+			AND (
+			a.time	 LIKE CONCAT(CONCAT('%', #{keywords}),'%') OR
+			a.way LIKE CONCAT(CONCAT('%', #{keywords}),'%') OR
+			a.temp LIKE CONCAT(CONCAT('%', #{keywords}),'%') OR
+			a.content LIKE CONCAT(CONCAT('%', #{keywords}),'%') OR
+			a.acceptman LIKE CONCAT(CONCAT('%', #{keywords}),'%') OR
+			a.phone LIKE CONCAT(CONCAT('%', #{keywords}),'%') OR
+			a.sendman LIKE CONCAT(CONCAT('%', #{keywords}),'%') OR
+			a.cate LIKE CONCAT(CONCAT('%', #{keywords}),'%') OR
+			a.state LIKE CONCAT(CONCAT('%', #{keywords}),'%')
+			)
+		</if>
+		order by id desc
+	</select>
+
+
+
+	<select id="findMsgvipByIdlistPage" resultType="pd" parameterType="page">
+		SELECT * FROM t_msglog where clientid=#{pd.id}
+		<if test="pd.starttime!=null and pd.starttime!='' and pd.endtime!=null and pd.endtime!=''">
+			and time BETWEEN #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.sendman!=null and pd.sendman!=''">
+			and sendman=#{pd.sendman}
+		</if>
+		<if test="pd.phone!=null and pd.phone!=''">
+			and phone=#{pd.phone}
+		</if>
+		<if test="pd.keywords != null and pd.keywords != ''">
+		AND (
+		time	 LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+		way LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+		temp LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+		content LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+		acceptman LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+		phone LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+		clientid LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+		clientname LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+		sendman LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+		)
+		</if>
+	</select>
+
+	<select id="findMsgcustByIdlistPage" resultType="pd" parameterType="page">
+		SELECT a.* FROM t_msglog a RIGHT JOIN (SELECT phone FROM t_custom WHERE id=#{pd.id}) b ON FIND_IN_SET(a.phone,b.phone)
+		<if test="pd.starttime!=null and pd.starttime!='' and pd.endtime!=null and pd.endtime!=''">
+			and time BETWEEN #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.sendman!=null and pd.sendman!=''">
+			and sendman=#{pd.sendman}
+		</if>
+		<if test="pd.phone!=null and pd.phone!=''">
+			and phone=#{pd.phone}
+		</if>
+		<if test="pd.keywords != null and pd.keywords != ''">
+			AND (
+			time	 LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			way LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			temp LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			content LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			acceptman LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			phone LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			sendman LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			)
+		</if>
+	</select>
+
+
+	<insert id="insertMsgLog" parameterType="pd">
+		INSERT INTO t_msglog(
+		time,
+		way,
+		temp,
+		content,
+		acceptman,
+		phone,
+		sendman,
+		state,
+		sendtime,
+		returnmsg,
+		cate,
+		phones,
+		phonesid,
+		phoneid,
+		uid,
+		ucid,
+		czman,
+		czdate,
+		source
+
+		)VALUES (
+		#{time},
+		#{way},
+		#{temp},
+		#{content},
+		#{acceptman},
+		#{phone},
+		#{sendman},
+		#{state},
+		#{sendtime},
+		#{returnmsg},
+		#{cate},
+		#{phones},
+		#{phonesid},
+		#{phoneid},
+		#{uid},
+		#{ucid},
+		#{czman},
+		#{czdate},
+		#{source}
+
+		)
+	</insert>
+
+	<update id="updateMsgLog" parameterType="pd">
+		UPDATE t_msglog
+		SET
+		time=#{time},
+		way=#{way},
+		temp=#{temp},
+		content=#{content},
+		acceptman=#{acceptman},
+		phone=#{phone},
+		sendman=#{sendman},
+		sendtime=#{sendtime},
+		state=#{state},
+		returnmsg=#{returnmsg},
+		cate=#{cate},
+		phones=#{phones},
+		phonesid=#{phonesid},
+		phoneid=#{phoneid},
+		ucid=#{ucid},
+		uid=#{uid},
+		source=#{source}
+		where id=#{id}
+	</update>
+
+	<select id="findMsgByState" resultType="pd" parameterType="pd">
+		SELECT * FROM t_msglog where state='0'
+		<if test="time!=null and time!=''">
+			and time &lt;= #{time}
+		</if>
+	</select>
+
+	<update id="updateState" parameterType="pd">
+		UPDATE
+			t_msglog
+		SET
+			state=#{state},
+			sendtime=now(),
+			returnmsg=#{returnmsg}
+		where id=#{id}
+	</update>
+
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="pd">
+		delete from
+		t_msgtemp
+		where
+		id in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</delete>
+
+	<select id="getvipinfo" parameterType="pd" resultType="pd">
+		SELECT DISTINCT a.* FROM t_vipinfo a LEFT JOIN t_ortherlink b ON a.id=b.vipid WHERE otel IS NOT NULL
+		<if test="id!=null and id!=''">
+			and a.id=#{id}
+		</if>
+	</select>
+
+	<select id="getviptel" parameterType="pd" resultType="pd">
+		select * from t_ortherlink where 1=1
+		<if test="vipid!=null and vipid!=''">
+			and vipid=#{vipid}
+		</if>
+	</select>
+
+	<select id="getcustom" resultType="pd" parameterType="pd">
+		select * from t_custom where 1=1 and phone is not null
+		<if test="id!=null and id!=''">
+			and id=#{id}
+		</if>
+	</select>
+
+	<select id="getaddlist" parameterType="pd" resultType="pd">
+		select * from t_addresslist where 1=1 and tel1 is not null and issh='1' and isdel='0'
+        <if test="departmentid != null and departmentid != ''">
+            <if test="departmentid.indexOf(',') != -1">
+                and (
+                <foreach item="item" index="index" collection="departmentid.split(',')">
+                    <if test="index== 0">
+                        find_in_set(departmentid,${item})
+                    </if>
+                    <if test="index!= 0">
+                        or find_in_set(departmentid,${item})
+                    </if>
+                </foreach>
+                )
+            </if>
+        </if>
+		<if test="id!=null and id!=''">
+			and id=#{id}
+		</if>
+	</select>
+
+	<select id="gomsgdatils" resultType="pd" parameterType="pd">
+		select a.id,
+		DATE_FORMAT(a.time,'%Y-%m-%d %H:%i:%s') time,
+		a.way,
+		a.temp,
+		a.content,
+		a.acceptman,
+		a.phone,
+		a.sendman,
+		DATE_FORMAT(a.sendtime,'%Y-%m-%d %H:%i:%s') sendtime,
+		a.state,
+		a.returnmsg,
+		a.cate,
+		a.phones,
+		a.phonesid,
+		b.tempname AS tempname,
+		a.uid,
+		a.ucid
+		FROM t_msglog a LEFT JOIN t_msgtemp b ON a.temp=b.id where a.id=#{id}
+	</select>
+</mapper>

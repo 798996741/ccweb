@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="StatisticsMapper">
+    <select id="statistics" resultType="pd" parameterType="pd">
+        SELECT COUNT(a.id) COUNT,b.`name` FROM `lostandfound_article` a
+	    INNER JOIN `lostandfound_dictionaries` b
+	    ON a.`article_level`=b.`dictionaries_id`
+        INNER JOIN found_finder c
+        ON a.finder_id=c.id
+        WHERE is_reportloss=0
+        <if test="StartTime!=null and StartTime!='' ">
+            AND c.finder_time >= #{StartTime}
+        </if>
+        <if test="EndTime!=null and EndTime!=''">
+            AND #{EndTime} >= c.finder_time
+        </if>
+        GROUP BY article_level;
+    </select>
+
+    <select id="FindLevel" resultType="pd">
+        SELECT * FROM lostandfound_dictionaries
+        WHERE PARENT_ID='defcd730-d87a-11ea-bd5a-fa163e003af7'
+    </select>
+</mapper>

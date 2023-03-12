@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RunMapper">
+
+	<resultMap type="Run" id="RunResultMap">
+		<result column="ID" property="ID"/>
+		<result column="RUN_CODE" property="RUN_CODE"/>
+		<result column="RUN_CONT" property="RUN_CONT"/>
+		<result column="RUN_VALUE" property="RUN_VALUE"/>
+		<result column="CZMAN" property="CZMAN"/>
+		<result column="CZDATE" property="CZDATE"/>
+		
+	</resultMap>
+	
+	
+	
+	<!--表名 -->
+	<sql id="tableName">
+		T_YLIOT_RUN
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		RUN_CODE, RUN_CONT,RUN_VALUE,CZMAN,CZDATE
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{RUN_CODE},#{RUN_CONT}, #{RUN_VALUE}, #{CZMAN},#{CZDATE}
+	</sql>
+	
+	<!--通过ID获取其子一级菜单 -->
+	<select id="runlist" parameterType="page" resultType="pd">
+		select 
+		 a.*
+		from  T_YLIOT_RUN a 
+		
+		where 1=1
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+					 a.RUN_CODE LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or 
+					 a.RUN_CONT LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+					 or
+					 a.RUN_VALUE LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				)
+		</if>
+		order by czdate desc
+	</select>
+	
+	<!-- 新增-->
+	<update id="update" parameterType="pd">
+		update 
+		<include refid="tableName"></include>
+		set 
+		RUN_CODE=#{RUN_CODE},RUN_VALUE=#{RUN_VALUE}, RUN_CONT=#{RUN_CONT},
+		CZMAN =#{CZMAN},CZDATE=sysdate()
+		where ID =#{ID}
+	</update>
+		<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		 ID,RUN_CODE, RUN_CONT,RUN_VALUE,CZMAN,CZDATE
+		from <include refid="tableName"></include> a 
+			
+		<if test="ID!= null and ID != ''"><!-- 检索 -->
+			where a.id = #{ID}
+		</if>
+	</select>
+	
+	<select id="caselist" parameterType="pd" resultType="pd" >
+		select 
+		 a.*
+		from  T_YLIOT_RUN a 
+		
+		order by czdate desc
+	</select>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+			<include refid="tableName"></include>
+		(
+			<include refid="Field"></include>
+		) values (
+			#{RUN_CODE},#{RUN_CONT}, #{RUN_VALUE},
+			#{CZMAN},sysdate()
+		)
+	</insert>
+	
+	
+	<delete id="delete" parameterType="pd">
+		delete from  
+			<include refid="tableName"></include>
+		where ID=#{0}
+	</delete>
+	
+	
+	<!-- 通过USERNAME获取数据 -->
+	<select id="findid" parameterType="pd" resultType="pd" >
+		select 
+			<include refid="Field"></include>
+		from 
+			<include refid="tableName"></include>
+		where 
+			RUN_CODE = #{RUN_CODE}
+		<if test="ID!= null and ID != ''"><!-- 检索 -->
+			and id != #{ID}
+		</if>
+	</select>
+	
+	
+</mapper>

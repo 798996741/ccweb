@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="RecycleMapper">
+    <!--回收箱列表-->
+    <select id="RecyclelistPage" parameterType="page" resultType="pd">
+        SELECT a.id, a.article_identifier AS articleIdentifier, a.article_name AS articleName
+        , DATE_FORMAT(f.finder_time, '%Y-%m-%d %H:%i:%s') AS finderTime, f.finder_flightNumber AS finderFlightNumber
+        , f.finder_place AS finderPlace, f.finder_name AS finderName, f.finder_tel AS finderTel, a.article_cliam AS articleCliam
+        ,(
+        SELECT d.name
+        FROM lostandfound_dictionaries d
+        WHERE d.dictionaries_id = a.article_cliam
+        ) AS articleCliamName,
+        a.article_level AS articleLevel,
+        (
+        SELECT d.name
+        FROM lostandfound_dictionaries d
+        WHERE d.dictionaries_id = a.article_level
+        ) AS articleLevelName,
+        DATE_FORMAT(a.article_duedate, '%Y-%m-%d %H:%i:%s') AS articleDuedate,
+        a.type,
+        (
+        SELECT d.name
+        FROM lostandfound_dictionaries d
+        WHERE d.dictionaries_id = a.type
+        ) AS typeName,
+        a.sub_type AS subType,
+        (
+        SELECT d.name
+        FROM lostandfound_dictionaries d
+        WHERE d.dictionaries_id = a.sub_type
+        ) AS subTypeName,
+        a.airport_code AS airportCode,
+        a.air_port AS airPort,
+        a.hand_person_unit AS handPersonUnit,
+        a.lost_picture AS lostPicture,
+        a.registry_Photo AS registryPhoto,
+        a.is_publicity AS isPublicity,
+        a.is_checked AS isChecked,
+        DATE_FORMAT(a.create_time, '%Y-%m-%d %H:%i:%s') AS createTime
+        FROM lostandfound_article a
+        LEFT JOIN found_finder f ON a.finder_id = f.id
+        WHERE a.is_reportloss = 0
+        AND a.isdel=1
+        <if test="pd.id != null and pd.id != ''">
+            and a.id = #{pd.id}
+        </if>
+        <if test="pd.articleName != null and pd.articleName != ''">
+            and a.article_name like #{pd.articleName}
+        </if>
+        <if test="pd.finderPlace != null and pd.finderPlace != ''">
+            and f.finder_place like #{pd.finderPlace}
+        </if>
+        <if test="pd.articleCliam != null and pd.articleCliam != ''">
+            and a.article_cliam like #{pd.articleCliam}
+        </if>
+        <if test="pd.startTime!=null and pd.startTime!=''">
+            and f.finder_time &gt; #{pd.startTime}
+        </if>
+        <if test="pd.endTime!=null and pd.endTime!=''">
+            and f.finder_time &lt; #{pd.endTime}
+        </if>
+        <if test="pd.keywords != null and pd.keywords != ''">
+            and
+            a.article_identifier like concat("%",#{pd.keywords},"%") or
+            a.article_name like concat("%",#{pd.keywords},"%") or
+            f.finder_time like concat("%",#{pd.keywords},"%") or
+            f.finder_flightNumber like concat("%",#{pd.keywords},"%") or
+            f.finder_place like concat("%",#{pd.keywords},"%") or
+            f.finder_name like concat("%",#{pd.keywords},"%") or
+            f.finder_tel like concat("%",#{pd.keywords},"%") or
+            a.article_cliam like concat("%",#{pd.keywords},"%") or
+            a.article_duedate like concat("%",#{pd.keywords},"%")
+        </if>
+        order by a.update_time desc
+    </select>
+    <!--回收箱还原-->
+    <update id="restore" parameterType="String">
+        update lostandfound_article set isdel=0 where id in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DoctypeMapper">
+	
+	<resultMap type="Doctype" id="docResultMap">
+		<id column="id" property="id"/>
+		<result column="name" property="name"/>
+		<result column="parentid" property="parentid"/>
+	</resultMap>
+	
+	<!--表名 -->
+	<sql id="tableName">
+		t_doctype
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+	name,
+	sort,
+	type,
+	createdate,
+	createman,
+	cont,
+	state,
+	parentid,
+	dept
+		
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{name},
+		#{sort},
+		#{type},
+		now(),
+		#{createman},
+		#{cont},
+		#{state},
+		#{parentid},
+		#{dept}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			id = #{id}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			name=#{name},
+			sort=#{sort},
+			type=#{type},
+			createman=#{createman},
+			cont=#{cont},
+			state=#{state},
+			parentid=#{parentid}
+			<if test="dept!= null and dept!= ''"><!-- 检索 -->
+				,dept = #{dept}
+			</if>
+		where 
+			id = #{id}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+			a.name,
+			a.sort,
+			a.type,
+			a.createdate,
+			a.createman,
+			a.cont,
+			a.state,
+			a.parentid,
+			a.dept,a.id,b.zxxm
+		from 
+		<include refid="tableName"></include> a 
+		left join tzxlb b on a.createman=b.id
+		where 
+			a.id = #{id}
+	</select>
+	
+	<!-- 通过编码获取数据 -->
+	<select id="findByBianma" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>,id
+		from 
+		<include refid="tableName"></include>
+		where 
+			BIANMA = #{BIANMA}
+	</select>
+	
+	<!-- 通过名字 -->
+	<select id="findByName" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>,id
+		from 
+		<include refid="tableName"></include>
+		where 
+			name = #{name}
+		and type = #{type} limit 0,1
+	</select>
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+		name,
+	sort,
+	type,
+	createdate,
+	createman,
+	cont,
+	state,
+	parentid,
+	a.dept,a.id
+		from 
+		<include refid="tableName"></include>
+		 a 
+		left join tzxlb b on a.createman=b.id
+		where
+			1=1
+		<if test="pd.id!= null and pd.id != ''"><!-- 检索 -->
+		and parentid = #{pd.id}
+		</if>
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				 name LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				
+				)
+		</if>
+
+		<if test="pd.dept!= null and pd.dept!= ''">
+			and a.dept=#{pd.dept}
+		</if>
+		<if test="pd.userdept!= null and pd.userdept!= ''">
+			and b.dept=#{pd.userdept}
+		</if>
+		order by createdate desc
+
+	</select>
+	
+	<!-- 通过ID获取其子级列表 -->
+	<select id="listSubDictByParentId" parameterType="String" resultMap="docResultMap">
+		select 
+		<include refid="Field"></include>,id
+		from 
+		<include refid="tableName"></include>
+		where 
+			parentid = #{parentid} order by sort
+	</select>
+	
+	
+	
+	<!-- 用户列表(全部) -->
+	<select id="listAllDictByDict" parameterType="pd" resultType="pd" >
+		select 
+		<include refid="Field"></include>,id
+		from 
+		<include refid="tableName"></include>
+		where id in
+  		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</select>
+	
+	<!-- 用户列表(全部) -->
+	<select id="listAllDoctype" parameterType="pd" resultType="pd" >
+		select 
+			a.name,
+			a.sort,
+			a.type,
+			a.createdate,
+			a.createman,
+			a.cont,
+			a.state,
+			a.parentid,
+			a.dept,a.id,b.zxxm
+		from 
+		<include refid="tableName"></include> a 
+		left join tzxlb b on a.createman=b.id
+		where 1=1 
+		<if test="state!= null and state != ''"><!-- 检索 -->
+			and a.state = #{state}
+		</if>
+		<if test="type!= null and type != ''"><!-- 检索 -->
+			and a.type = #{type}
+		</if>
+		<if test="userid!= null and userid != ''"><!-- 检索 -->
+			and a.createman = #{userid}
+		</if>
+		<if test="dept!= null and dept != ''"><!-- 检索 -->
+			and a.dept = #{dept}
+		</if>
+		<if test="parentid!= null and parentid != ''"><!-- 检索 -->
+			and a.parentid = #{parentid}
+		</if>
+		
+	   	order by a.createdate desc
+
+	</select>
+	
+</mapper>

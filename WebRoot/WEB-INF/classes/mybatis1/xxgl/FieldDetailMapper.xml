@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="FieldDetailMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		T_MODEL_FIELD_DETAIL
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		UID,	
+		FIELD,	
+		ADDR,	
+		MAX,	
+		MIN,	
+		REMARK
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+			#{UID},	
+			#{FIELD},	
+			#{ADDR},	
+			#{MAX},	
+			#{MIN},	
+			#{REMARK}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into
+		<include refid="tableName"></include>
+		(
+		<include refid="Field"></include>
+		) values (
+		<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			UID= #{UID}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+			set 
+				UID = #{UID},	
+				"FIELD" = #{FIELD},	
+				"ADDR" = #{ADDR},	
+				"MAX" = #{MAX},	
+				"MIN" = #{MIN},	
+				"REMARK" = #{REMARK},	
+			"FIELDDETAIL_ID" = "FIELDDETAIL_ID"
+			where 
+				"FIELDDETAIL_ID" = #{FIELDDETAIL_ID}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			UID = #{UID}
+	</select>
+	
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			UID = #{UID}
+	</select>
+	
+	
+	<!-- 列表(全部) -->
+	<select id="warnlist" parameterType="pd" resultType="pd">
+		select a.FIELD,a.NUM,a.ENDPOINT,a.TOPIC,a.CREATEDATE,a.REMARK,b.CASE_NAME,c.NAME as FIELDNAME,d.ENDPOINT_NAME from t_warn a 
+		left join t_yliot_case b on a.caseid=b.id
+		left join SYS_DICTIONARIES c on a.field=c.name_en
+		left join t_yliot_endpoint d on a.endpoint=d.endpoint_id
+		where 1=1
+		<if test="endpoint != null and endpoint != ''"><!-- 用户名检索 -->
+			and a.endpoint LIKE CONCAT(CONCAT('%', #{endpoint}),'%')
+		</if>
+		<if test="caseid != null and caseid != ''"><!-- 角色检索 -->
+			and a.caseid=#{caseid} 
+		</if>
+		<if test="caseid != null and caseid != ''"><!-- 角色检索 -->
+			and a.caseid=#{caseid} 
+		</if>
+		
+		<if test="field != null and field != ''"><!-- 角色检索 -->
+			and a.field=#{field} 
+		</if>
+		<if test="lastLoginStart!=null and lastLoginStart!=''"><!-- 到期时间检索 -->
+			and a.createdate &gt;= #{lastLoginStart} 
+		</if>
+		<if test="lastLoginEnd!=null and lastLoginEnd!=''"><!-- 到期时间检索 -->
+			and a.createdate &lt;= #{lastLoginEnd} 
+		</if>
+		
+	</select>
+	
+</mapper>

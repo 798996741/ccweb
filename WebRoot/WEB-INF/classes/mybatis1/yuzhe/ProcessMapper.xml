@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ProcessMapper">
+    <delete id="deleteProcessById" parameterType="pd" >
+        <if test="id != null and id != ''">
+            delete from lostandfound_process where article_id = #{id};
+        </if>
+    </delete>
+
+    <insert id="saveRegister" parameterType="pd">
+insert into lostandfound_process values
+(null, #{id}, #{createId}, #{receivePlace},
+(SELECT `dictionaries_id` FROM lostandfound_dictionaries WHERE `name_en` = 'register'),
+ '登记记录',now(),now())
+    </insert>
+
+    <select id="findProcess" parameterType="pd" resultType="pd">
+        SELECT t.zxxm AS handleName,t.tel AS handleTel, DATE_FORMAT(p.create_time, '%Y-%m-%d %H:%i:%s') AS handlTime,p.receive_place AS handlePlace,
+        (SELECT `name` FROM lostandfound_dictionaries WHERE `dictionaries_id` = p.process_type) AS handleType, p.process_detail AS handleDetail
+        FROM lostandfound_process p LEFT JOIN tzxlb t ON t.id = p.user_id
+        WHERE 1 = 1
+  <if test="id != null and id != ''">
+        and article_id = #{id}
+  </if>
+        order by p.create_time asc
+    </select>
+    
+    <insert id="saveProcessByUpdate" parameterType="pd">
+        insert into lostandfound_process values
+        (null, #{articleId}, #{createId}, #{receivePlace},
+        (SELECT `dictionaries_id` FROM lostandfound_dictionaries WHERE `name_en` = 'update'),
+        #{processDetail},now(),now())
+    </insert>
+
+    <insert id="saveProcessByGet" parameterType="pd">
+        insert into lostandfound_process values
+        (null, #{articleId}, #{createId}, #{receivePlace},
+        (SELECT `dictionaries_id` FROM lostandfound_dictionaries WHERE `name_en` = 'goAndGet'),
+        (SELECT `name` FROM lostandfound_dictionaries WHERE `dictionaries_id` = #{articleClaim}),now(),now())
+    </insert>
+
+    <insert id="saveProcessByReceive" parameterType="pd">
+       insert into lostandfound_process values
+        (null, #{articleId}, #{createId}, #{receivePlace},
+        #{articleClaim},
+        #{processDetail},now(),now())
+    </insert>
+
+    <insert id="batchSaveProcessByReceive" parameterType="pd">
+        insert into lostandfound_process values
+        <foreach collection="ids.split(',')" item="articleId"  separator=",">
+            (null, #{articleId}, #{createId}, #{receivePlace},
+            #{articleClaim},
+            #{processDetail},now(),now())
+        </foreach>
+    </insert>
+    <insert id="saveProcessByAgain" useGeneratedKeys="true" keyProperty="flag">
+        insert into lostandfound_process values
+        (null, #{id}, #{createId}, #{receivePlace},
+        '443b79ce-3b9c-11eb-a128-fa163e003af7',
+        #{processDetail},now(),now())
+    </insert>
+</mapper>

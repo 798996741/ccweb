@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TaskcustomMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		ID,
+		TEMPLATE_ID,	
+		TYPE,
+		TASKNAME,
+		COMPLETEDATE,
+		STATE,	
+		TASKMAN,
+		CREATEMAN,
+		CREATEDATE
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{ID},
+		#{TEMPLATE_ID},	
+		#{TYPE},
+		#{TASKNAME},
+		to_date(#{COMPLETEDATE},'YYYY-MM-DD'),
+		#{STATE},
+		#{TASKMAN},
+		#{CREATEMAN},
+		now()
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd" useGeneratedKeys="false">
+		
+		 <![CDATA[ 
+		   INSERT INTO ${tableName}(${lineColumn}) 
+		   select result.* from( 
+		   ]]> 
+		    select  
+		    ${lineValues}
+		   	from dual) 
+		   
+		    <!--<foreach collection="lineList" item="item" index="index" separator="union all" > 
+		    select  
+		    <foreach collection="item" index="key" item="_value" separator=","> 
+		      #{_value} 
+		    </foreach>  
+		   	from dual) 
+		   </foreach>  -->
+		    
+		   <![CDATA[ result]]>   
+		
+	</insert>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findByField" parameterType="pd" resultType="pd">
+		select * from  ${tableName} where  ${selectStr}
+	</select>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+			${TABLENAME} 
+		where 
+			ID = #{ID}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+			${TABLENAME} 
+		set 
+		FPMAN=#{FPMAN},	
+		ZXMAN=#{ZXMAN}
+		where 
+			ID = #{ID}
+	</update>
+	
+	<update id="editCustom" parameterType="pd">
+		update
+			${TABLENAME} 
+		set 
+			${UPDATESTR} 
+		where 
+			ID = #{ID}
+	</update>
+	
+	<!-- 修改 -->
+	<update id="editHF" parameterType="pd">
+		update
+			${TABLENAME} 
+		set 
+		HFWJ=#{HFWJ},	
+		HFDATE=now(),	
+		HFRESULT=#{HFRESULT},
+		HFREMARK=#{HFREMARK}
+		where 
+			ID = #{ID}
+	</update>
+	
+	
+	
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		${TABLESTR} 
+	</select>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findFieldByID" parameterType="pd" resultType="pd">
+		select
+		${FIELD} 
+		from 
+		${TABLENAME} 
+		where 1=1 and ID = #{ID}
+	</select>
+	
+	<!-- 列表 -->
+	<select id="datalist" parameterType="page" resultType="pd">
+		select * from  ${tableName} where 1=1
+		
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				
+				TASKNAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				)
+		</if>
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+		${FIELD},b.ZXXM 
+		from 
+		${TABLENAME} a
+		left join TZXLB b on a.ZXMAN=b.ID ,(SELECT @i:=0) t
+		where 1=1 
+		<if test="ZXMAN!= null and ZXMAN != ''"><!-- 关键词检索 -->
+			and ZXMAN = #{ZXMAN}
+		</if>
+		order by  a.ID
+	</select>
+	
+	
+	
+	<!-- 列表(全部) -->
+	<select id="listAllBynotWj" parameterType="pd" resultType="pd">
+		select
+		${FIELD},b.ZXXM 
+		from 
+		${TABLENAME} a
+		left join TZXLB b on a.ZXMAN=b.ID
+		where 1=1 
+		<if test="ZXMAN!= null and ZXMAN != ''"><!-- 关键词检索 -->
+			and ZXMAN = #{ZXMAN}
+		</if>
+		and  hfwj is null
+		order by ROWNO 
+	</select>
+	
+	
+	<!-- 列表(全部) -->
+	<select id="listAllByWj" parameterType="pd" resultType="pd">
+		select
+		${FIELD},b.ZXXM 
+		from 
+		${TABLENAME} a
+		left join TZXLB b on a.ZXMAN=b.ID
+		where 1=1 
+		<if test="ZXMAN!= null and ZXMAN != ''"><!-- 关键词检索 -->
+			and ZXMAN = #{ZXMAN}
+		</if>
+		and hfwj='1'
+		and ZXMAN is not null
+		order by ROWNO 
+	</select>
+	
+	
+	
+	<!-- 列表(全部) -->
+	<select id="listAllByzxman" parameterType="pd" resultType="pd">
+		select
+		${FIELD} 
+		from 
+		${TABLENAME} a
+		where 1=1 
+		group by ZXMAN
+	</select>
+	
+	<select id="listAllIsfp" parameterType="pd" resultType="pd">
+		select
+		${FIELD} 
+		from 
+		${TABLENAME} a
+		where 1=1 
+		and ZXMAN is not null
+		<if test="HFWJ!= null and HFWJ != ''"><!-- 关键词检索 -->
+			and HFWJ = #{HFWJ}
+		</if>
+		
+	</select>
+	
+	<select id="listAllIsnotfp" parameterType="pd" resultType="pd">
+		
+		SELECT ${FIELD} FROM (SELECT ${FIELD}  FROM ${TABLENAME} ORDER BY ID) t WHERE 1=1 
+		and ZXMAN is null
+		<if test="ROWNUM!= null and ROWNUM != ''"><!-- 关键词检索 -->
+			and  ROWNUM &lt;= #{ROWNUM}
+		</if>
+	</select>
+	
+	
+	
+	<!-- 列表(全部) -->
+	<select id="listCustom" parameterType="pd" resultType="pd">
+		select
+		a.*,b.ZXXM,b.ZT
+		from 
+		${TABLENAME}  a
+		left join TZXLB b on a.ZXMAN=b.ID
+		where 1=1
+		<if test="ZXMAN!= null and ZXMAN != ''"><!-- 关键词检索 -->
+			and a.ZXMAN = #{ZXMAN}
+		</if>
+		<if test="ZXZ!= null and ZXZ != ''"><!-- 关键词检索 -->
+			and a.ZXMAN in (${ZXMANSTR})
+		</if>
+	</select>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+		</foreach>
+	</delete>
+	
+	<!-- 新增-->
+	<insert id="saveGroupFp" parameterType="pd">
+		insert into 
+		T_CUS_FP
+		(
+			GUID,			
+			TASKID,		
+		FIELD,		
+		GROUPNAME,	
+		NUM,			
+		TABLENAME,		
+		CREATEMAN,			
+		CREATEDATE,
+		ZXLB
+		
+		) values (
+			#{GUID},			
+			#{TASKID},		
+			#{FIELD},		
+			#{GROUPNAME},	
+			#{NUM},			
+			#{TABLENAME},		
+			#{CREATEMAN},			
+			now()	,
+			#{ZXLB}
+		)
+	</insert>
+	
+	<delete id="deleteGroupFp" parameterType="pd">
+		delete from
+			T_CUS_FP
+		where 
+			TASKID = #{TASKID}
+	</delete>
+	
+	<!-- 列表(全部) -->
+	<select id="listByGroupname" parameterType="pd" resultType="pd">
+		select
+		NUM,GUID,TASKID,FIELD,GROUPNAME 
+		from 
+		T_CUS_FP a
+		where 
+		TASKID=#{TASKID} and GROUPNAME=#{GROUPNAME}
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listByGroupField" parameterType="pd" resultType="pd">
+		select
+		FIELD
+		from 
+		T_CUS_FP a
+		where 
+		TASKID=#{TASKID}  group by FIELD
+	</select>
+	
+	<select id="listAllUseDe" parameterType="pd" resultType="pd">
+		select
+		*
+		from 
+		T_CUS_FP a
+		where 
+		TASKID=#{TASKID}  and usenum>0
+	</select>
+	
+	<select id="getCusByrandom" parameterType="pd" resultType="pd">
+		SELECT * FROM (SELECT * FROM ${TABLENAME} where 1=1  ${TJ} order by dbms_random.value) WHERE rownum =1
+	</select>
+	
+	<!-- 修改 -->
+	<update id="editCusFp" parameterType="pd">
+		update
+			T_CUS_FP
+		set 
+		usenum=usenum+1
+		where 
+			TASKID=#{TASKID} and GROUPNAME=#{GROUPNAME} and  num>usenum
+	</update>
+	
+	
+	
+	<select id="listAllCusFp" parameterType="pd" resultType="pd">
+		select
+		*
+		from 
+		T_CUS_FP a
+		where 
+		TASKID=#{TASKID}  and usenum>=0 and  num>usenum
+	</select>
+	
+	
+	<select id="listAllMsg" parameterType="pd" resultType="pd">
+		select
+		*
+		from 
+		T_CUS_FP a
+		where 
+		TASKID=#{TASKID} 
+	</select>
+	
+	
+	<!-- 351412933 -->
+</mapper>

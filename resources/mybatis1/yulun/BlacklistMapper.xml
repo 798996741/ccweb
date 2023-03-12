@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="BlacklistMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		t_blacklist
+	</sql>
+	
+	<!-- 字段 -->
+	
+	<sql id="Field">
+		tel,
+		subremark,
+		supremark,
+		czman,
+		czdate,
+		ip,
+		ucid,
+		type
+
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{tel},
+		#{subremark},
+		#{supremark},
+		#{czman},
+		now(),
+		#{ip},
+		#{ucid},
+		#{type}
+		
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	
+	<!-- 批量删除 -->
+	<update id="deleteAll" parameterType="String">
+		update
+			<include refid="tableName"></include>
+		set 
+  			isdel=#{isdel},
+  			remark=#{remark}
+		where 
+			id in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                 #{item}
+		</foreach>
+	</update>
+
+	<delete id="deleteBlack" parameterType="pd">
+		delete from t_blacklist where id=#{id}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+			<include refid="tableName"></include>
+		set 
+  			
+			tel=#{tel},
+			subremark=#{subremark},
+			supremark=#{supremark},
+			czman=#{czman},
+			czdate=now(),
+			ip=#{ip},
+			type=#{type}
+		where 
+		id = #{id}
+	</update>
+	
+	
+	<!-- 修改 -->
+	<update id="sh" parameterType="String">
+		update
+			<include refid="tableName"></include>
+		set 
+  			issh=#{issh},
+			shman=#{shman},
+			shremark=#{shremark},
+			shdate=now()  
+		where 
+		find_in_set(id,#{id})
+	</update>
+	
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select 
+			a.id,
+			a.tel,
+			a.supremark,
+			a.subremark,
+			a.czman,
+			a.shman,
+			a.shremark,
+			a.ip,
+			a.issh,
+			a.type,
+			a.ucid,
+			DATE_FORMAT(a.shdate,"%Y-%m-%d %T") as shdate,
+			DATE_FORMAT(a.czdate,"%Y-%m-%d %T") as czdate,
+			c.zxxm as czname,
+			d.zxxm as shname,
+			f.file_name,
+			f.start_time,
+			f.end_time,
+			f.ext_no
+		 from 
+		<include refid="tableName"></include> a 
+		left join ccrecord.t_recording_track f on a.ucid=f.ucid
+		left join tzxlb c on a.czman=c.id
+		left join tzxlb d on a.shman=d.id
+		where 1=1
+		
+		<if test="pd.tel!= null and pd.tel != ''"><!-- 关键词检索 -->
+			and
+				(
+					a.tel LIKE CONCAT(CONCAT('%', #{pd.tel}),'%')
+				)
+		</if>
+		<if test="pd.czman!= null and pd.czman != ''"><!-- 关键词检索 -->
+			and
+				(
+					c.zxid LIKE CONCAT(CONCAT('%', #{pd.czman}),'%')
+					or
+					c.zxxm LIKE CONCAT(CONCAT('%', #{pd.czman}),'%')
+				)
+		</if>
+		
+		<if test="pd.name!= null and pd.name!= ''">
+			and a.name LIKE CONCAT(CONCAT('%', #{pd.name}),'%')
+		</if>
+		<if test="pd.starttime!=null and pd.starttime!=''"><!-- 开始时间检索 -->
+			and a.czdate &gt;= #{pd.starttime} 
+		</if>
+		<if test="pd.endtime!=null and pd.endtime!=''"><!-- 结束时间检索 -->
+			and a.czdate &lt;= #{pd.endtime} 
+		</if>
+		<if test="pd.subremark!= null and pd.subremark!= ''">
+			and a.subremark LIKE CONCAT(CONCAT('%', #{pd.subremark}),'%')
+		</if>
+		
+		<if test="pd.departmentid!= null and pd.departmentid!= ''">
+			and a.departmentid=#{pd.departmentid}
+		</if>
+		<if test="pd.issh!= null and pd.issh!= ''">
+			and a.issh=#{pd.issh}
+		</if>
+		<if test="pd.zxid!= null and pd.zxid!= ''">
+			and c.zxid=#{pd.zxid}
+		</if>
+		<if test="pd.dept!= null and pd.dept!= ''">
+			and c.dept=#{pd.dept}
+		</if>
+		
+		<if test="pd.isdel!= null and pd.isdel!= ''">
+			and a.isdel=#{pd.isdel}
+		</if>
+		
+		order by a.czdate desc
+	</select>
+	
+	
+	<select id="listByids" parameterType="pd" resultType="pd">
+		select 
+			a.id,
+			a.tel,
+			a.supremark,
+			a.subremark,
+			a.czman,
+			a.shman,
+			a.shremark,
+			a.ip,
+			a.issh,
+			DATE_FORMAT(a.shdate,"%Y-%m-%d %T") as shdate,
+			DATE_FORMAT(a.czdate,"%Y-%m-%d %T") as czdate,
+			c.zxxm as czname,
+			d.zxxm as shname
+		 from 
+		<include refid="tableName"></include> a 
+		left join tzxlb c on a.czman=c.id
+		left join tzxlb d on a.shman=d.id
+		where 1=1
+		<if test="ids!= null and ids != ''">
+			and find_in_set(a.id,#{ids})
+		</if>
+	</select>
+	
+	
+	<!-- 通过id获取数据 -->
+	<select id="findByid" parameterType="pd" resultType="pd">
+		select 
+			a.id,
+			a.tel,
+			a.supremark,
+			a.subremark,
+			a.czman,
+			a.shman,
+			a.shremark,
+			a.ip,
+			a.issh,
+			a.type,
+			a.ucid,
+			DATE_FORMAT(a.shdate,"%Y-%m-%d %T") as shdate,
+			DATE_FORMAT(a.czdate,"%Y-%m-%d %T") as czdate,
+			c.zxxm as czname,
+			d.zxxm as shname,
+			b.lywj,
+			b.id as lyid
+		 from 
+		<include refid="tableName"></include> a 
+		left join trecord b on a.ucid=b.ucid
+		left join tzxlb c on a.czman=c.id
+		left join tzxlb d on a.shman=d.id
+		where
+			a.id = #{id}	
+	</select>
+	<select id="findByTel" parameterType="pd" resultType="pd">
+		select 
+			a.id,
+			a.tel,
+			a.supremark,
+			a.subremark,
+			a.czman,
+			a.shman,
+			a.shremark,
+			a.ip,
+			a.issh,
+			a.type,
+			a.ucid,
+			DATE_FORMAT(a.shdate,"%Y-%m-%d %T") as shdate,
+			DATE_FORMAT(a.czdate,"%Y-%m-%d %T") as czdate,
+			c.zxxm as czname,
+			d.zxxm as shname,
+			b.lywj,
+			b.id as lyid
+		 from 
+		<include refid="tableName"></include> a 
+		left join trecord b on a.ucid=b.ucid
+		left join tzxlb c on a.czman=c.id
+		left join tzxlb d on a.shman=d.id
+		where
+			a.tel = #{tel}
+			<if test="id!= null and id != ''">	
+			and a.id != #{id}
+			</if>
+	</select>
+	
+	<!-- 通过id获取数据 -->
+	<select id="findSysparam" parameterType="pd" resultType="pd">
+		select param_value from sys_param where param_code=#{param_code}
+		<!-- 'recordsvr' -->
+	</select>
+	
+	<select id="listSysparams" parameterType="pd" resultType="pd">
+		select * from sys_param where find_in_set(param_code,#{param_code})
+	</select>
+	
+	
+	<!-- 新增-->
+	<insert id="saveZxlog" parameterType="pd">
+		 INSERT INTO TZXCZRZ(ID,ZX,CZXM,FSSJ,THJL,NOTE,RQ) 
+		 values 
+		 (func_nextid('tZXCZRZ'),#{ZXID},#{CZXM},now(),#{UCID},#{NOTE},#{RQ})
+	</insert>
+	
+	<!-- 351412933 -->
+</mapper>

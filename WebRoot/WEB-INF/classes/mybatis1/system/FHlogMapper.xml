@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="FHlogMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		SYS_FHLOG
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		USERNAME,	
+		CZTIME,	
+		CONTENT,	
+		FHLOG_ID
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+			#{USERNAME},	
+			#{CZTIME},	
+			#{CONTENT},	
+			#{FHLOG_ID}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into
+		<include refid="tableName"></include>
+		(
+		<include refid="Field"></include>
+		) values (
+		<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	
+	<!-- 新增-->
+	<insert id="saveLog" parameterType="pd">
+		insert into
+		t_sys_log
+		(
+			name,czdate,ip,cont,type,funtype,fun,filename,fileurl,logintype
+		) values (
+			#{name},now(),#{ip},#{cont},#{type},#{funtype},#{fun},#{filename},#{fileurl},#{logintype}
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			FHLOG_ID = #{FHLOG_ID}
+	</delete>
+		
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			FHLOG_ID = #{FHLOG_ID}
+	</select>
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+			a.name,DATE_FORMAT(a.czdate,"%Y-%m-%d %T") as czdate,ip,cont,type,funtype,fun,e.name as funname ,filename,fileurl,logintype
+		from 
+			t_sys_log a
+			left join SYS_DICTIONARIES e on a.fun=e.DICTIONARIES_ID
+		where 1=1
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+					a.name LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					or
+					cont LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					or
+					ip like CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				)
+		</if>
+		<if test="pd.lastStart!=null and pd.lastStart!=''"><!-- 开始时间检索 -->
+			and a.czdate &gt;= #{pd.lastStart} 
+		</if>
+		<if test="pd.fun!=null and pd.fun!=''"><!-- 开始时间检索 -->
+			and fun = #{pd.fun} 
+		</if>
+		<if test="pd.type!=null and pd.type!=''"><!-- 开始时间检索 -->
+			and type = #{pd.type} 
+		</if>
+		<if test="pd.funtype!=null and pd.funtype!=''"><!-- 开始时间检索 -->
+			and funtype = #{pd.funtype} 
+		</if>
+		<if test="pd.lastEnd!=null and pd.lastEnd!=''"><!-- 结束时间检索 -->
+			and czdate &lt;= #{pd.lastEnd} 
+		</if>
+		order by a.czdate desc
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+	</select>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			FHLOG_ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                 #{item}
+		</foreach>
+	</delete>
+	
+	<!-- huangjianling -->
+</mapper>

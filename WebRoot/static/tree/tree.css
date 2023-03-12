@@ -1,0 +1,45 @@
+
+.button-edit {
+    background: url(../img/icon/edit.png) no-repeat;
+    background-size: 59px 24px;
+    cursor: pointer;
+    width: 59px;
+    height: 24px;
+}
+
+.button-delete {
+    background: url(../img/icon/delete.png) no-repeat;
+    background-size: 59px 24px;
+    cursor: pointer;
+    width: 59px;
+    height: 24px;
+}
+
+.button-setting {
+    background: url(../img/icon/setting.png) no-repeat;
+    background-size: 59px 24px;
+    cursor: pointer;
+    width: 59px;
+    height: 24px;
+}
+
+.button-content {
+    font-size: 10px;
+    font-family: sans-serif;
+    color: #fff;
+    line-height: 23px;
+    padding-left: 15px;
+    letter-spacing: 3px;
+}
+
+.flex-position {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.flex-row {
+    display: flex;
+    flex-direction: row;
+}

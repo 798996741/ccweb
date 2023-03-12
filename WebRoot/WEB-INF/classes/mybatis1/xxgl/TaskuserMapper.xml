@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TaskuserMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		T_TASK
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		ID,
+		NAIRE_TEMPLATE_ID,	
+		CUSTOM_TEMPLATE_ID,
+		TYPE,
+		TASKNAME,
+		COMPLETEDATE,
+		STATE,	
+		TASKMAN,
+		CREATEMAN,
+		CREATEDATE
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{ID},
+		#{NAIRE_TEMPLATE_ID},	
+		#{CUSTOM_TEMPLATE_ID},
+		#{TYPE},
+		#{TASKNAME},
+		#{COMPLETEDATE},
+		#{STATE},
+		#{TASKMAN},
+		#{CREATEMAN},
+		now()
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			ID = #{ID}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+		NAIRE_TEMPLATE_ID=#{NAIRE_TEMPLATE_ID},	
+		CUSTOM_TEMPLATE_ID=#{CUSTOM_TEMPLATE_ID},
+		TYPE=#{TYPE},
+		TASKNAME=#{TASKNAME},
+		COMPLETEDATE=#{COMPLETEDATE},
+		STATE=#{STATE},	
+		TASKMAN=#{TASKMAN},	
+		CREATEMAN=#{CREATEMAN},
+		CREATEDATE=now()
+		where 
+			ID = #{ID}
+	</update>
+	
+	<!-- 修改 -->
+	<update id="editStateqd" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+		STATE=#{STATE},
+		TASKMAN=#{TASKMAN}
+		where 
+			ID = #{ID}
+	</update>
+	
+	
+	
+	<!-- 修改 -->
+	<update id="editStateCom" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+		STATE=#{STATE},
+		COMPLETEDATE=to_date(#{COMPLETEDATE},'YYYY-MM-DD')
+		where 
+			ID = #{ID}
+	</update>
+	
+	<!-- 修改 -->
+	<update id="editTableName" parameterType="pd">
+		update
+			<include refid="tableName"></include>
+		set 
+			TABLENAME=#{TABLENAME}
+		where 
+			ID = #{ID}
+	</update>
+	
+	<!-- 修改分配方式 -->
+	<update id="editFptype" parameterType="pd">
+		update
+			<include refid="tableName"></include>
+		set 
+			FPTYPE=#{FPTYPE},
+			ZXZ=#{ZXZ},
+			ZXIDSTR=#{ZXIDSTR}
+		where 
+			ID = #{ID}
+	</update>
+	
+	<update id="dropTable">
+		drop table ${TABLENAME}   
+	</update>
+	<update id="createNewTable" parameterType="pd">  
+        ${TABLESTR}
+    </update> 
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		a.ID,
+		a.NAIRE_TEMPLATE_ID,	
+		a.CUSTOM_TEMPLATE_ID,
+		a.TYPE,
+		a.TASKNAME,
+		COMPLETEDATE,
+		
+		a.STATE,
+		a.TASKMAN,	
+		a.CREATEMAN,
+		a.CREATEDATE,
+		a.TABLENAME,
+		a.FPTYPE,
+		a.ZXZ,
+		a.ZXIDSTR		
+		from 
+		<include refid="tableName"></include> a
+		where 
+			ID = #{ID}
+	</select>
+	
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findByCode" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			CODE = #{CODE}
+			<if test="ID!= null and ID != ''"><!-- 关键词检索 -->
+				and ID != #{ID}
+			</if>
+	</select>
+	
+	
+	<!-- 列表 -->
+	<select id="datalist" parameterType="page" resultType="pd">
+		select 
+		a.ID,
+		a.NAIRE_TEMPLATE_ID,	
+		a.CUSTOM_TEMPLATE_ID,	
+		a.TYPE,
+		c.NAME  as TYPENAME,
+		a.TASKNAME,
+	    COMPLETEDATE,
+		
+		a.STATE,
+		a.TASKMAN,	
+		a.CREATEMAN,
+		a.CREATEDATE,
+		b.NAME as CUSTOM_TEMPLATE_NAME,
+		d.NAME as NAIRE_TEMPLATE_NAME,
+		a.TABLENAME,
+		a.FPTYPE,
+		a.ZXIDSTR
+		from  
+		<include refid="tableName"></include>  a 
+		 	left join T_CUSTOM_TEMPLATE b  on b.ID=a.CUSTOM_TEMPLATE_ID
+		 	left join T_NAIRE_TEMPLATE d on d.ID=a.NAIRE_TEMPLATE_ID
+     		left join SYS_DICTIONARIES c on a.TYPE=c.DICTIONARIES_ID
+		where 1=1
+		
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				TASKNAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				)
+		</if>
+		<if test="pd.STATE!= null and pd.STATE != ''"><!-- 关键词检索 -->
+			and STATE= #{pd.STATE}
+		</if>
+		<if test="pd.COMPLETEDATE!= null and pd.COMPLETEDATE != ''"><!-- 关键词检索 -->
+			and COMPLETEDATE+1>#{pd.COMPLETEDATE}
+		</if>
+		
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+		<if test="CUSTOM_TEMPLATE_ID!= null and CUSTOM_TEMPLATE_ID != ''"><!-- 关键词检索 -->
+			and CUSTOM_TEMPLATE_ID = #{CUSTOM_TEMPLATE_ID}
+		</if>
+	</select>
+	
+	
+	<!-- 列表(全部) -->
+	<select id="findByTablename" parameterType="pd" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where tablename is null and ID= #{ID}
+	</select>
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+		</foreach>
+	</delete>
+	
+	<!-- 列表(全部) -->
+	<select id="listAllGroupByField" parameterType="pd" resultType="pd">
+		select
+		${FIELD},count(*) as counter
+		from 
+		${TABLENAME} 
+		group by ${FIELD}
+	</select>
+	
+	
+	
+	<!-- 351412933 -->
+</mapper>

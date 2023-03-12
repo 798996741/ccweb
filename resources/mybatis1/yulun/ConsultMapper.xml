@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ConsultMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		t_consult
+	</sql>
+	
+	<!-- 字段 -->
+	
+	<sql id="Field">
+	
+		orderno,
+		phone,
+		contype,
+		content,
+		receivetime,
+		commonid,
+		czman,
+		czdate,
+		title,
+		customid,
+		ucid,
+		type
+
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{orderno},
+		#{phone},
+		#{contype},
+		#{content},
+		#{receivetime},
+		#{commonid},
+		#{czman},
+		now(),
+		#{title},
+		#{customid},
+		#{ucid},
+		#{type}
+		
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+			<include refid="tableName"></include>
+		set 
+			phone=#{phone},
+			contype=#{contype},
+			content=#{content},
+			receivetime=#{receivetime},
+			commonid=#{commonid},
+			czman=#{czman},
+			czdate=now(),
+			title=#{title},
+			title=#{title}
+		where 
+		id = #{id} or orderno = #{orderno}
+	</update>
+	
+	
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select 
+			a.id,
+			a.orderno,
+			a.phone,
+			a.contype,
+			a.content,
+			a.receivetime,
+			a.commonid,
+			a.czman,
+			a.title,
+			a.customid,
+			a.ucid,
+			a.type,
+			b.NAME as contypename,
+			DATE_FORMAT(a.czdate,"%Y-%m-%d %T") as czdate,
+			c.zxxm as czname,
+			d.name as customname,
+			c.zxid,
+			f.file_name,
+			f.start_time,
+			f.end_time,
+			f.ext_no,
+			g.NAME as typename
+		 from 
+		<include refid="tableName"></include> a 
+		left join SYS_DICTIONARIES b on a.contype=b.DICTIONARIES_ID
+		left join tzxlb c on a.czman=c.id
+		left join t_custom d on a.customid=d.id
+		left join ccrecord.t_recording_track f on a.ucid=f.ucid
+		left join SYS_DICTIONARIES g on a.type=g.bianma
+		where 1=1
+		
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+					a.title LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or 
+					a.content LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or
+					a.phone LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				)
+		</if>
+		<if test="pd.starttime!=null and pd.starttime!=''"><!-- 开始时间检索 -->
+			and a.czdate &gt;= #{pd.starttime} 
+		</if>
+		<if test="pd.endtime!=null and pd.endtime!=''"><!-- 结束时间检索 -->
+			and a.czdate &lt;= #{pd.endtime} 
+		</if>
+		
+		<if test="pd.phone!= null and pd.phone != ''"><!-- 关键词检索 -->
+			and
+				(
+					a.phone LIKE CONCAT(CONCAT('%', #{pd.phone}),'%')
+				)
+		</if>
+		
+		
+		<if test="pd.title!= null and pd.title!= ''">
+			and a.title LIKE CONCAT(CONCAT('%', #{pd.title}),'%')
+		</if>
+		
+		<if test="pd.ucid!= null and pd.ucid!= ''">
+			and a.ucid =#{pd.ucid}
+		</if>
+		
+		<if test="pd.contype!= null and pd.contype!= ''">
+			and a.contype=#{pd.contype}
+		</if>
+		<if test="pd.customid!= ''">
+			and a.customid=#{pd.customid}
+		</if>
+		<if test="pd.zxid!= ''">
+			and c.zxid=#{pd.zxid}
+		</if>
+		<if test="pd.ZXZ!= null and pd.ZXZ!= ''">
+			and c.ZXZ=#{pd.ZXZ}
+		</if>
+		
+		
+		order by a.czdate desc
+	</select>
+	
+	
+	
+	<!-- 通过id获取数据 -->
+	<select id="findByid" parameterType="pd" resultType="pd">
+		select 
+			a.id,
+			a.orderno,
+			a.phone,
+			a.contype,
+			a.content,
+			a.receivetime,
+			a.commonid,
+			a.czman,
+			a.title,
+			b.NAME as contypename,
+			DATE_FORMAT(a.czdate,"%Y-%m-%d %T") as czdate,
+			c.zxxm as czname,
+			d.name as customname
+		 from 
+		<include refid="tableName"></include> a 
+		left join SYS_DICTIONARIES b on a.contype=b.DICTIONARIES_ID
+		left join tzxlb c on a.czman=c.id
+		left join t_custom d on a.customid=d.id
+		where 1=1 and
+			a.id = #{id} or a.orderno = #{orderno} 	
+	</select>
+	
+	
+	
+	<select id="findByYear" parameterType="pd" resultType="pd">
+		select 
+			year, code_num
+		from 
+			t_consult_code
+		where 
+			year = #{year}
+	</select>
+	
+	
+	<update id="editCode" parameterType="pd">
+		update t_consult_code 
+		set 
+			<if test="code_num != null and code_num != ''">
+				code_num = #{code_num}
+			</if>
+		where 
+			year = #{year}
+	</update>
+	
+	<insert id="saveCode" parameterType="pd">
+		insert into t_consult_code
+		(
+			year,
+			code_num
+		) values (
+			#{year},
+			#{code_num}
+		)
+	</insert>
+	
+	
+	
+	<!-- 351412933 -->
+</mapper>

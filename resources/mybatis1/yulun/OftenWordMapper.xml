@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OftenWordMapper">
+
+    <select id="findWord" parameterType="pd" resultType="pd">
+		SELECT * FROM t_oftenword
+	</select>
+
+    <select id="findWordById" parameterType="pd" resultType="pd">
+		SELECT * FROM t_oftenword where id=#{id}
+	</select>
+
+    <insert id="insertWord" parameterType="pd">
+        INSERT INTO t_oftenword(
+            content
+        )VALUES (
+            #{content}
+        )
+    </insert>
+
+    <update id="updateWord" parameterType="pd">
+        UPDATE t_oftenword
+		SET
+		content=#{content}
+		WHERE id=#{id}
+    </update>
+
+    <delete id="deleteWord" parameterType="pd">
+		DELETE FROM t_oftenword WHERE id=#{id}
+	</delete>
+
+    <select id="findevaluate" parameterType="pd" resultType="pd">
+		SELECT * FROM t_evaluate
+	</select>
+
+    <select id="findevaluateById" parameterType="pd" resultType="pd">
+		SELECT * FROM t_evaluate where id=#{id}
+	</select>
+
+    <insert id="insertevaluate" parameterType="pd">
+        INSERT INTO t_evaluate(
+            id,
+            start,
+            issolve,
+            suggest,
+            zxid,
+            time
+        )VALUES (
+            #{id},
+            #{start},
+            #{issolve},
+            #{suggest},
+            #{zxid},
+            #{time}
+        )
+    </insert>
+
+    <update id="updateevaluate" parameterType="pd">
+        UPDATE t_evaluate
+		SET
+		start=#{start},
+		issolve=#{issolve},
+		suggest=#{suggest},
+		zxid=#{zxid}
+		WHERE id=#{id}
+    </update>
+
+    <delete id="deleteevaluate" parameterType="pd">
+		DELETE FROM t_evaluate WHERE id=#{id}
+	</delete>
+
+    <insert id="inserttthjl" parameterType="pd">
+		insert into tthjl(
+			id,
+			bcsj,
+			bjhm,
+			ddsj,
+			fwsj,
+			gjyy,
+			thlx,
+			fwzt,
+			hwlsh,
+			jnid,
+			jssj,
+			khpj,
+			kssj,
+			rq,
+			shclsj,
+			thsj,
+			ucid,
+			zjdh,
+			zjhm,
+			zxid,
+			yzzt,
+			khh,
+			thfx,
+			hdhm,
+			hdxm,
+			url,
+			sendurl
+		) values (
+			#{id},
+			0,
+			#{bjhm},
+			0,
+			0,
+			#{gjyy},
+			#{thlx},
+			#{fwzt},
+			#{hwlsh},
+			#{jnid},
+			#{jssj},
+			0,
+			#{kssj},
+			#{rq},
+			0,
+			0,
+			#{ucid},
+			#{zjdh},
+			#{zjhm},
+			#{zxid},
+			#{yzzt},
+			#{khh},
+			0,
+			#{hdhm},
+			#{hdxm},
+			#{url},
+			#{sendurl}
+		)
+	</insert>
+
+    <update id="updatetthjl" parameterType="pd">
+		UPDATE tthjl
+		SET
+		id=#{id},
+		bcsj=0,
+		bjhm=#{bjhm},
+		ddsj=0,
+		fwsj=0,
+		gjyy=#{gjyy},
+		thlx=#{thlx},
+		fwzt=#{fwzt},
+		hwlsh=#{hwlsh},
+		jnid=#{jnid},
+		jssj=#{jssj},
+		khpj=0,
+		kssj=#{kssj},
+		rq=#{rq},
+		shclsj=0,
+		thsj=#{thsj},
+		ucid=#{ucid},
+		zjdh=#{zjdh},
+		zjhm=#{zjhm},
+		zxid=#{zxid},
+		yzzt=#{yzzt},
+		khh=#{khh},
+		thfx=0,
+		hdhm=#{hdhm},
+		hdxm=#{hdxm},
+		url=#{url},
+		sendurl=#{sendurl}
+		WHERE id=#{id}
+	</update>
+
+    <select id="getID" parameterType="pd" resultType="pd">
+      select func_nextid('tTHJL')
+    </select>
+</mapper>

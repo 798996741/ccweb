@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AirlineMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		
+	</sql>
+	
+	<!-- 字段 -->
+	
+	<sql id="Field">
+	
+		
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		
+		
+	</sql>
+	
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		
+	select m.*,n.*,concat_ws('-',n.AirportIATACodes,m.AirportIATACode,m.AirportIATACodes_D) as airlineEnglish,
+		   concat_ws('-',n.AirportRoutingNames,m.AirportRoutingName_D,m.AirportRoutingNames_D) as airlineChina   
+	from (
+		select a.AirportIATACode,a.aodb_id as aodb_id_D,a.CreateDate,a.FlightScheduledDate as FlightScheduledDate_D
+			,a.FlightIdentity as  FlightIdentity_D,c.OperationStatus as OperationStatus_D,d.ScheduledTakeOffDateTime as STOT_D
+			,d.ScheduledLandingDateTime as ScheduledLandingDateTime_D,d.EstimatedLandingDateTime as EstimatedLandingDateTime_D,d.ActualLandingDateTime as ActualLandingDateTime_D,
+			e.StandID as StandID_D,c.DelayFreeText as DelayFreeText_D,b.Registration as Registration_D,b.AircraftIATACode as AircraftIATACode_D,b.FlightDirection as  FlightDirection_head ,
+			b.FlightIdentity as  FlightIdentity_head ,b.FlightScheduledDate as  FlightScheduledDate_head 
+			,(select GROUP_CONCAT(route.AirportIATACode SEPARATOR '-') FROM aodb.t_fss_flightdata_gerneral_iatafullroute route  where route.aodb_id=a.aodb_id and type='AirportIATACode' order by legno) as AirportIATACodes_D
+			,(select GROUP_CONCAT(air.AirportRoutingName SEPARATOR '-') FROM aodb.t_fss_flightdata_gerneral_iatafullroute route left join aodb.t_bss_airport air on route.AirportIATACode=air.AirportIATACode  where route.aodb_id=a.aodb_id and type='AirportIATACode' order by legno) as AirportRoutingNames_D
+			,f.AirportRoutingName as AirportRoutingName_D
+		from aodb.t_fss_primarykey a
+		left join aodb.t_fss_flightdata_gerneral b on a.aodb_id=b.aodb_id
+		left join aodb.t_fss_flightdata_status c on a.aodb_id=c.aodb_id
+		left join aodb.t_fss_flightdata_operationaldatetime d on a.aodb_id=d.aodb_id
+		left join aodb.t_fss_flightdata_airport e on a.aodb_id=e.aodb_id
+		left join aodb.t_bss_airport f on a.AirportIATACode=f.AirportIATACode
+		where a.FlightDirection='D'
+	)  m  left JOIN (
+		select a.aodb_id,a.FlightScheduledDate,a.FlightIdentity,c.OperationStatus,d.ScheduledTakeOffDateTime as STOT 
+			,d.ScheduledLandingDateTime,d.EstimatedLandingDateTime,d.ActualLandingDateTime,
+			e.StandID,c.DelayFreeText,b.Registration,b.AircraftIATACode
+			,(select GROUP_CONCAT(route.AirportIATACode SEPARATOR '-') FROM aodb.t_fss_flightdata_gerneral_iatafullroute route  where route.aodb_id=a.aodb_id and type='AirportIATACode' order by legno) as AirportIATACodes
+			,(select GROUP_CONCAT(air.AirportRoutingName SEPARATOR '-') FROM aodb.t_fss_flightdata_gerneral_iatafullroute route left join aodb.t_bss_airport air on route.AirportIATACode=air.AirportIATACode  where route.aodb_id=a.aodb_id and type='AirportIATACode' order by legno) as AirportRoutingNames
+			,f.AirportRoutingName
+		from 
+		aodb.t_fss_primarykey a
+		left join aodb.t_fss_flightdata_gerneral b on a.aodb_id=b.aodb_id
+		left join aodb.t_fss_flightdata_status c on a.aodb_id=c.aodb_id
+		left join aodb.t_fss_flightdata_operationaldatetime d on a.aodb_id=d.aodb_id
+		left join aodb.t_fss_flightdata_airport e on a.aodb_id=e.aodb_id
+		left join aodb.t_bss_airport f on a.AirportIATACode=f.AirportIATACode
+		where a.FlightDirection='A'
+	)  n
+ 	on m.FlightScheduledDate_head=n.FlightScheduledDate and m.FlightIdentity_head=n.FlightIdentity 
+	where 1=1
+		<if test="pd.FlightScheduledDate!=null and pd.FlightScheduledDate!=''"><!-- 时间检索 -->
+			and (FlightScheduledDate_D= #{pd.FlightScheduledDate}  or FlightScheduledDate= #{pd.FlightScheduledDate} )
+		</if>
+		
+		<if test="pd.FlightIdentity!=null and pd.FlightIdentity!=''"><!-- 航班号 -->
+			and (FlightIdentity_D= #{pd.FlightIdentity}  or FlightIdentity= #{pd.FlightIdentity} )
+		</if>
+		
+		<if test="pd.keywords!=null and pd.keywords!=''"><!-- 关键字查询 -->
+			and (FlightIdentity_D=#{pd.keywords} or FlightIdentity=#{pd.keywords} or FlightScheduledDate=#{pd.keywords} or
+ 			FlightScheduledDate_D=#{pd.keywords} or concat_ws('-',n.AirportIATACodes,m.AirportIATACode,m.AirportIATACodes_D) like CONCAT(CONCAT('%', #{pd.keywords}),'%'))
+		</if>
+		
+		
+		<if test="pd.airLineEnglish!= null and pd.airLineEnglish!= ''">
+			and concat_ws('-',n.AirportIATACodes,m.AirportIATACode,m.AirportIATACodes_D) like CONCAT(CONCAT('%', #{pd.airLineEnglish}),'%')
+		</if>
+		order by m.CreateDate desc
+	</select>
+
+	<!-- 未查询列表 -->
+	<select id="datalist" parameterType="pd" resultType="pd">
+
+		select m.*,n.*,concat_ws('-',n.AirportIATACodes,m.AirportIATACode,m.AirportIATACodes_D) as airlineEnglish,
+		concat_ws('-',n.AirportRoutingNames,m.AirportRoutingName_D,m.AirportRoutingNames_D) as airlineChina
+		from (
+		select a.AirportIATACode,a.aodb_id as aodb_id_D,a.CreateDate,a.FlightScheduledDate as FlightScheduledDateTime_D
+		,a.FlightIdentity as  FlightIdentity_D,c.OperationStatus as OperationStatus_D,d.ScheduledTakeOffDateTime as
+		ScheduledTakeOffDateTime_D,d.ActualTakeOffDateTime as ActualTakeOffDateTime_D
+		,d.ScheduledLandingDateTime as ScheduledLandingDateTime_D,d.EstimatedLandingDateTime as EstimatedLandingDateTime_D,d.ActualLandingDateTime as ActualLandingDateTime_D,
+		e.StandID as StandID_D,e.GateID as GateID_D,e.ActualGateEndDateTime as
+		ActualGateEndDateTime_D,c.DelayFreeText as
+		DelayFreeText_D,b.Registration as
+		Registration_D,b.AircraftIATACode as AircraftIATACode_D,b.FlightDirection as  FlightDirection_head ,
+		b.FlightIdentity as  FlightIdentity_head ,b.FlightScheduledDate as  FlightScheduledDate_head
+		,(select GROUP_CONCAT(route.AirportIATACode SEPARATOR '-') FROM aodb.t_fss_flightdata_gerneral_iatafullroute route  where route.aodb_id=a.aodb_id and type='AirportIATACode' order by legno) as AirportIATACodes_D
+		,(select GROUP_CONCAT(air.AirportRoutingName SEPARATOR '-') FROM aodb.t_fss_flightdata_gerneral_iatafullroute route left join aodb.t_bss_airport air on route.AirportIATACode=air.AirportIATACode  where route.aodb_id=a.aodb_id and type='AirportIATACode' order by legno) as AirportRoutingNames_D
+		,f.AirportRoutingName as AirportRoutingName_D
+		from aodb.t_fss_primarykey a
+		left join aodb.t_fss_flightdata_gerneral b on a.aodb_id=b.aodb_id
+		left join aodb.t_fss_flightdata_status c on a.aodb_id=c.aodb_id
+		left join aodb.t_fss_flightdata_operationaldatetime d on a.aodb_id=d.aodb_id
+		left join aodb.t_fss_flightdata_airport e on a.aodb_id=e.aodb_id
+		left join aodb.t_bss_airport f on a.AirportIATACode=f.AirportIATACode
+		where a.FlightDirection='D'
+		AND a.iscreate is null
+		)  m  left JOIN (
+		select a.aodb_id,a.FlightScheduledDate,a.FlightIdentity,c.OperationStatus,d.ScheduledTakeOffDateTime as STOT
+		,d.ScheduledLandingDateTime,d.EstimatedLandingDateTime,d.ActualLandingDateTime,
+		e.StandID,c.DelayFreeText,b.Registration,b.AircraftIATACode
+		,(select GROUP_CONCAT(route.AirportIATACode SEPARATOR '-') FROM aodb.t_fss_flightdata_gerneral_iatafullroute route  where route.aodb_id=a.aodb_id and type='AirportIATACode' order by legno) as AirportIATACodes
+		,(select GROUP_CONCAT(air.AirportRoutingName SEPARATOR '-') FROM aodb.t_fss_flightdata_gerneral_iatafullroute route left join aodb.t_bss_airport air on route.AirportIATACode=air.AirportIATACode  where route.aodb_id=a.aodb_id and type='AirportIATACode' order by legno) as AirportRoutingNames
+		,f.AirportRoutingName
+		from
+		aodb.t_fss_primarykey a
+		left join aodb.t_fss_flightdata_gerneral b on a.aodb_id=b.aodb_id
+		left join aodb.t_fss_flightdata_status c on a.aodb_id=c.aodb_id
+		left join aodb.t_fss_flightdata_operationaldatetime d on a.aodb_id=d.aodb_id
+		left join aodb.t_fss_flightdata_airport e on a.aodb_id=e.aodb_id
+		left join aodb.t_bss_airport f on a.AirportIATACode=f.AirportIATACode
+		where a.FlightDirection='A'
+		AND a.iscreate is null
+		)  n
+		on m.FlightScheduledDate_head=n.FlightScheduledDate and m.FlightIdentity_head=n.FlightIdentity
+
+		order by m.CreateDate desc
+	</select>
+
+	<insert id="saveCache" parameterType="pd" >
+		insert into aodb.t_fss_primarykey_cache
+		values
+		<foreach item="item" index="index" collection="list" separator="," >
+			(#{item.id},#{item.aodb_id_D},#{item.AirportIATACode},#{item.CreateDate},#{item.FlightScheduledDate_D},
+			#{item.FlightIdentity_D},#{item.OperationStatus_D},#{item.ScheduledTakeOffDateTime_D},#{item.ScheduledLandingDateTime_D},#{item.EstimatedLandingDateTime_D},#{item.ActualLandingDateTime_D},#{item.StandID_D},
+			#{item.DelayFreeText_D},#{item.Registration_D},#{item.AircraftIATACode_D},#{item.FlightDirection_head},#{item.FlightIdentity_head},
+			#{item.FlightScheduledDate_head},#{item.AirportIATACodes_D},#{item.AirportRoutingNames_D},#{item.AirportRoutingName_D},#{item.aodb_id},#{item.FlightScheduledDate},
+			#{item.FlightIdentity},#{item.OperationStatus},#{item.STOT},#{item.ScheduledLandingDateTime},#{item.EstimatedLandingDateTime},
+			#{item.ActualLandingDateTime},#{item.StandID},#{item.DelayFreeText},#{item.Registration},#{item.AircraftIATACode},#{item.AirportIATACodes},#{item.AirportRoutingNames}
+			,#{item.AirportRoutingName},#{item.airlineEnglish},#{item.airlineChina},
+			#{item.ActualTakeOffDateTime_D},#{item.GateID_D},#{item.ActualGateEndDateTime_D})
+		</foreach>
+	</insert>
+
+	<update id="updIsCreate" parameterType="pd">
+		update aodb.t_fss_primarykey set iscreate=1 where aodb_id in
+		<foreach item="item" index="index" collection="list" open="(" separator="," close=")">
+			#{item.aodb_id_D}
+		</foreach>
+	</update>
+	
+	<!-- 通过id获取数据 -->
+	<select id="findByid" parameterType="pd" resultType="pd">
+		select 
+			a.id,
+			a.orderno,
+			a.phone,
+			a.contype,
+			a.content,
+			a.receivetime,
+			a.commonid,
+			a.czman,
+			a.title,
+			b.NAME as contypename,
+			DATE_FORMAT(a.czdate,"%Y-%m-%d %T") as czdate,
+			c.zxxm as czname,
+			d.name as customname
+		 from 
+		<include refid="tableName"></include> a 
+		left join SYS_DICTIONARIES b on a.contype=b.DICTIONARIES_ID
+		left join tzxlb c on a.czman=c.id
+		left join t_custom d on a.customid=d.id
+		where 1=1 and
+			a.id = #{id} or a.orderno = #{orderno} 	
+	</select>
+	
+	<select id="cacheDatalistPage" parameterType="page" resultType="pd">
+		select * from aodb.aodbview
+		where 1=1
+		<if test="pd.FlightScheduledDate!=null and pd.FlightScheduledDate!=''"><!-- 时间检索 -->
+			and (FlightScheduledDate_D= #{pd.FlightScheduledDate}  or FlightScheduledDate= #{pd.FlightScheduledDate} )
+		</if>
+
+		<if test="pd.FlightIdentity!=null and pd.FlightIdentity!=''"><!-- 航班号 -->
+			and (FlightIdentity_D= #{pd.FlightIdentity}  or FlightIdentity= #{pd.FlightIdentity} )
+		</if>
+
+		<if test="pd.keywords!=null and pd.keywords!=''"><!-- 关键字查询 -->
+			and (FlightIdentity_D=#{pd.keywords} or FlightIdentity=#{pd.keywords} or FlightScheduledDate=#{pd.keywords} or
+			FlightScheduledDate_D=#{pd.keywords} or airlineEnglish like CONCAT(CONCAT('%', #{pd.keywords}),'%'))
+		</if>
+
+
+		<if test="pd.airLineEnglish!= null and pd.airLineEnglish!= ''">
+			and airlineEnglish like CONCAT(CONCAT('%', #{pd.airLineEnglish}),'%')
+		</if>
+		order by CreateDate desc
+	</select>
+	
+	
+	<!-- 351412933 -->
+</mapper>

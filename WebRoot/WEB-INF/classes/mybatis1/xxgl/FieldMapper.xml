@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="FieldMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		T_FIELD
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		ID,
+		FIELDNAME,	
+		FIELD,		
+		FIELDTYPE,	
+		FIELDNUM,
+		ISBASIC,	
+		ISTEL,	
+		ISUSE,	
+		ISSHOW,
+		ISPE,
+		PX,	
+		CREATEMAN,
+		CREATEDATE
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{ID},
+		#{FIELDNAME},	
+		#{FIELD},		
+		#{FIELDTYPE},	
+		#{FIELDNUM},	
+		#{ISBASIC},	
+		#{ISTEL},	
+		#{ISUSE},
+		#{ISSHOW},
+		#{PX},	
+		#{ISPE},
+		#{CREATEMAN},
+		now()
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			ID = #{ID}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			FIELDNAME=#{FIELDNAME},	
+			FIELD=#{FIELD},		
+			FIELDTYPE=#{FIELDTYPE},	
+			FIELDNUM=#{FIELDNUM},	
+			ISBASIC=#{ISBASIC},	
+			ISTEL=#{ISTEL},	
+			ISUSE=#{ISUSE},
+			ISSHOW=#{ISSHOW},
+			PX=#{PX},
+			ISPE=#{ISPE},
+			CREATEMAN=#{CREATEMAN},
+			CREATEDATE=now()
+		where 
+			ID = #{ID}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			ID = #{ID}
+	</select>
+	
+	<!-- 列表 -->
+	<select id="datalist" parameterType="page" resultType="pd">
+		select 
+		a.ID,
+		a.FIELDNAME,	
+		a.FIELD,		
+		a.FIELDTYPE,	
+		a.FIELDNUM,	
+		a.CREATEMAN,
+		a.ISBASIC,	
+		a.ISTEL,
+		a.ISUSE,
+		a.ISSHOW,
+		a.PX,
+		a.ISPE,
+		a.CREATEDATE,
+		d.name as FIELDTYPENAME
+		from  T_FIELD a
+			
+			left join SYS_DICTIONARIES d on a.FIELDTYPE=d.name_en
+		where 1=1
+		
+		
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				<!--	根据需求自己加检索条件
+					a.FIELDNAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or 
+					字段2 LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%') 
+				-->
+					a.FIELDNAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					or a.FIELD LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					or d.name LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				)
+		</if>
+			order by a.px asc,ISSHOW desc
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+		<if test="ISBASIC!= null and ISBASIC!= ''"><!-- 关键词检索 -->
+			and ISBASIC=#{ISBASIC}
+		</if>
+		<if test="FIELD!= null and FIELD!= ''"><!-- 关键词检索 -->
+			and FIELD=#{FIELD}
+		</if>
+		<if test="ID!= null and ID!= ''"><!-- 关键词检索 -->
+			and ID=#{ID}
+		</if>
+		<if test="ISUSE!= null and ISUSE!= ''"><!-- 关键词检索 -->
+			and ISUSE=#{ISUSE}
+		</if>
+		<if test="FIELDSTR != null and FIELDSTR!= ''"><!-- 关键词检索 -->
+			and FIELD not in(${FIELDSTR})
+		</if>
+		order by px
+	</select>
+	
+	
+	<select id="listAllExit" parameterType="pd" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 1=1
+		<if test="FIELD!= null and FIELD!= ''"><!-- 关键词检索 -->
+			and UPPER(FIELD)=UPPER(#{FIELD})
+		</if>
+		<if test="ID!= null and ID!= ''"><!-- 关键词检索 -->
+			and ID!=#{ID}
+		</if>
+	</select>
+	
+	
+	
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+		</foreach>
+		 and ISUSE!='1'
+	</delete>
+	
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findByAddr" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			startaddr = #{STARTADDR}
+	</select>
+	
+	<!-- 351412933 -->
+</mapper>

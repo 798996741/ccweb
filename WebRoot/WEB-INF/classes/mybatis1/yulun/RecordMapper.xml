@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RecordMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		ccrecord.t_recording_track
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		hwlsh,
+		ucid,
+		zjhm,
+		lysj,
+		lywj,
+		lylx,
+		zxid,
+		rq,
+		thfx
+
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{hwlsh},
+		#{ucid},
+		#{zjhm},
+		#{lysj},
+		#{lywj},
+		#{lylx},
+		#{zxid},
+		#{rq},
+		#{thfx}
+		
+	</sql>
+	
+	
+	
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			id in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+                 #{item}
+		</foreach>
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="pf" parameterType="pd">
+		update
+			<include refid="tableName"></include>
+		set 
+  			score=#{score},
+			pfman=#{pfman},
+			pfremark=#{pfremark},
+			pfdate=now()  
+		where 
+		id = #{id}
+	</update>
+	
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select * from (
+			select 
+				a.id,
+				a.callid as hwlsh,
+				a.ucid,
+				a.start_time as lysj,
+				a.file_name as lywj,
+				'坐席录音' as lylx,
+				c.zxid,
+				e.rq,
+				a.score,
+				a.pfman,
+				a.pfremark,
+				a.ext_no,
+				DATE_FORMAT(a.pfdate,"%Y-%m-%d %T") as pfdate,
+				DATE_FORMAT(e.kssj,"%Y-%m-%d %T") as kssj,
+				DATE_FORMAT(e.jssj,"%Y-%m-%d %T") as jssj,
+				e.thsj,
+				c.zxxm as zxname,
+				e.thfx,
+				e.zjhm,
+				e.bjhm,
+				case e.khpj
+				when 5 then '很满意'
+				when 4 then '满意'
+				when 2 then '不满意'
+				when 0 then ''
+				end khpj,
+				d.zxxm as pfmanname
+			 from 
+			ccrecord.t_recording_track a 
+			left join tthjl e on a.ucid=e.ucid
+			left join tzxlb c on e.zxid=c.zxid
+			left join tzxlb d on a.pfman=d.id
+			where 1=1
+			<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+				and (
+					e.zjhm LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					or
+					e.bjhm LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					or
+					a.pfremark LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					or
+					a.pfman LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					or
+					a.ext_no LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				)
+			</if>
+			<if test="pd.starttime!=null and pd.starttime!=''"><!-- 开始时间检索 -->
+				and a.start_time &gt;= #{pd.starttime} 
+			</if>
+			
+			<if test="pd.endtime!=null and pd.endtime!=''"><!-- 开始时间检索 -->
+				and a.start_time &lt;= #{pd.endtime} 
+			</if>
+			
+			<if test="pd.phone!= null and pd.phone!= ''">
+				and (
+					e.zjhm LIKE CONCAT(CONCAT('%', #{pd.phone}),'%')
+					or
+					e.bjhm LIKE CONCAT(CONCAT('%', #{pd.phone}),'%')
+				)
+			</if>
+			<if test="pd.zxid!= null and pd.zxid!= ''">
+				and e.zxid=#{pd.zxid}
+			</if>
+			<if test="pd.ZXZ!= null and pd.ZXZ!= ''">
+				and c.ZXZ=#{pd.ZXZ}
+			</if>
+			<if test="pd.thfx!= null and pd.thfx!= ''">
+				and e.thfx=#{pd.thfx}
+			</if>
+			<if test="pd.dept!= null and pd.dept!= ''">
+			and c.dept=#{pd.dept}
+		</if>
+	) t  order by lysj desc
+	</select>
+	
+	
+	<select id="listByids" parameterType="pd" resultType="pd">
+		select 
+				a.id,
+				a.callid as hwlsh,
+				a.ucid,
+				a.start_time as lysj,
+				a.file_name as lywj,
+				'坐席录音' as lylx,
+				c.zxid,
+				e.rq,
+				a.score,
+				a.pfman,
+				a.pfremark,
+				a.ext_no,
+				DATE_FORMAT(a.pfdate,"%Y-%m-%d %T") as pfdate,
+				DATE_FORMAT(e.kssj,"%Y-%m-%d %T") as kssj,
+				DATE_FORMAT(e.jssj,"%Y-%m-%d %T") as jssj,
+				e.thsj,
+				c.zxxm as zxname,
+				e.thfx,
+				e.zjhm,
+				e.bjhm,
+				d.zxxm as pfmanname
+			 from 
+			ccrecord.t_recording_track a 
+			left join tthjl e on a.ucid=e.ucid
+			left join tzxlb c on e.zxid=c.zxid
+			left join tzxlb d on a.pfman=d.id
+		where 1=1
+		<if test="ids!= null and ids != ''">
+			and find_in_set(a.id,#{ids})
+		</if>
+	</select>
+	
+	<select id="findRecordClearWarn" resultType="pd">
+		select param_value from sys_param where param_code='RecordClearWarn'
+	</select>
+	<update id="updRecordClearWarn" parameterType="pd" >
+		update sys_param set param_value=#{paramValue} where param_code='RecordClearWarn'
+	</update>
+	<!-- 351412933 -->
+</mapper>

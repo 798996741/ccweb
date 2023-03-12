@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OverdueItemsMapper">
+    <select id="getcount" resultType="Int">
+        SELECT
+	COUNT(*)
+FROM
+	`lostandfound_article` a
+	INNER JOIN `found_finder` b ON a.`finder_id` = b.`id`
+WHERE
+	NOW() >= article_duedate
+	AND is_reportloss = 0
+	AND is_eliminate = 0
+	AND isdel = 0
+	AND is_receive = 0
+    </select>
+
+    <select id="OverduelistPage" resultType="pd" parameterType="page">
+        SELECT a.*,b.finder_place,b.finder_time,b.`finder_name`,b.`finder_tel`,b.`finder_flightNumber` FROM `lostandfound_article` a
+        INNER JOIN `found_finder` b
+        ON a.`finder_id`=b.`id`
+        WHERE NOW() >= article_duedate
+        AND is_reportloss=0
+        AND is_eliminate=0
+        <!-- 物品名称查询 -->
+        <if test="pd.articleNname != null and pd.articleNname != '' ">
+            AND a.article_name = #{pd.articleNname}
+        </if>
+        
+        <!-- 拾取地点查询 -->
+        <if test="pd.PickPlace != null and pd.PickPlace != '' ">
+           AND a.article_lostplace = #{pd.PickPlace}
+        </if>
+
+        <!-- 拾取日期查询 -->
+        <if test="pd.StartTime != null and pd.StartTime != '' ">
+            AND a.article_losttime > #{pd.StartTime}
+        </if>
+
+        <!-- 结束日期查询 -->
+        <if test="pd.EndTime != null and pd.EndTime != '' ">
+            AND #{pd.EndTime} > a.article_losttime
+        </if>
+
+        <!-- 综合查询 -->
+        <if test="pd.keywords != null and pd.keywords != '' ">
+            AND CONCAT_WS('-',IFNULL(a.article_identifier,''),IFNULL(a.article_name,''),IFNULL(a.article_detail,'')
+            ,IFNULL(a.article_place,''),IFNULL(a.article_lostplace,'')) LIKE CONCAT('%',#{pd.keywords},'%')
+        </if>
+        ORDER BY a.create_time DESC
+    </select>
+
+    <update id="Overduedispose" parameterType="pd">
+        UPDATE `lostandfound_article`
+        SET article_cliam=#{articleCliam},is_eliminate=#{isEliminate},article_eliminateid=#{articleEliminateid},update_time=#{NowDate}
+        WHERE id=#{id};
+    </update>
+
+    <insert id="SaveProcess" parameterType="pd">
+        INSERT INTO `lostandfound_process`(`article_id`,`user_id`,`process_type`,`process_detail`,`create_time`)
+        VALUES(#{articleId},#{userId},#{processType},#{processDetail},#{createTime});
+    </insert>
+
+    <update id="OverdueAgain" parameterType="pd">
+        UPDATE `lostandfound_article`
+        SET article_duedate=#{articleDuedate},article_eliminateid=#{articleEliminateid},update_time=#{updateTime}
+        WHERE id=#{id};
+    </update>
+
+    <select id="getDaysByLevel" parameterType="pd" resultType="Int">
+        select remark Days from lostandfound_dictionaries where dictionaries_id=#{Level}
+    </select>
+
+    <select id="getOverdueById" resultType="pd" parameterType="pd">
+        SELECT a.*,b.`finder_name`,b.`finder_tel`,b.`finder_flightNumber` FROM `lostandfound_article` a
+        INNER JOIN `found_finder` b
+        ON a.`finder_id`=b.`id`
+        WHERE NOW() >= article_duedate
+        AND is_reportloss=0
+        AND a.id=#{id}
+    </select>
+
+    <delete id="delOverdueById" parameterType="pd">
+        delete from lostandfound_article where id=#{id}
+    </delete>
+</mapper>

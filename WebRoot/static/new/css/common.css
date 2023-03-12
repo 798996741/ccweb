@@ -1,0 +1,37 @@
+@charset "utf-8";
+/* CSS Document */
+body{font-family:"微软雅黑";height:100%;width:100%;color: #333; font-size:14px;}
+html{height: 100%; width: 100%}
+body, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, form, fieldset, input, textarea, blockquote, button{padding:0; margin:0;}
+table, td, tr, th{font-size:0.16667rem;}
+p{margin:0;}
+div, form, ul, ol, li, span, p{margin:0; padding:0; border:0; font-size:14px;}
+img, a img{ border:0; margin:0; padding:0; vertical-align:top;}
+h1, h2, h3, h4, h5, h6, strong{ margin:0; padding:0;}
+ul, li, ol, p, span{ list-style:none; font-size:14px;}
+.clear{clear:both; overflow:hidden;height:0;}
+a:link{ color:#333; text-decoration:none;}
+a:visited{ color:#333; text-decoration:none;}
+a:hover{ text-decoration:none;}
+input{padding:0;margin:0;}
+
+
+
+.left{float: left}
+.right{float: right}
+.margin{margin: 0 auto}
+.center{text-align: center}
+.border{border: #eee solid 1px;}
+.border-top{border-top: #eee solid 1px;}
+.border-bottom{border-bottom: #eee solid 1px;}
+.border-left{border-left: #eee solid 1px;}
+.border-right{border-right: #eee solid 1px;}
+.font-size{font-size: 14px;}
+.center-flex{display: flex;justify-content: center;align-items: center;}
+.inline-block{display: inline-block}
+.color{color: #fff;}
+.cursor{cursor:pointer}
+
+
+
+

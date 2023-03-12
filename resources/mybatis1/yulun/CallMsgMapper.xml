@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="CallMsgkMapper">
+
+<!--    <select id="findVipinfo" resultType="pd" parameterType="pd">-->
+<!--        SELECT a.zjhm,c.name,c.position,DATE_FORMAT(a.kssj,'%Y-%m-%d %H:%i:%s') AS kssj-->
+<!--        FROM tthjl a LEFT JOIN t_ortherlink b ON find_in_set(a.zjhm,b.otel)-->
+<!--        LEFT JOIN t_vipinfo c ON b.vipid=c.id-->
+<!--        WHERE 1=1-->
+<!--        <if test="zjhm != null and zjhm != ''">-->
+<!--            AND find_in_set(#{zjhm},a.zjhm)-->
+<!--        </if>-->
+<!--        <if test="ucid != null and ucid != ''">-->
+<!--            AND a.ucid=#{ucid}-->
+<!--        </if>-->
+
+<!--	</select>-->
+
+    <select id="findVipinfo" resultType="pd" parameterType="pd">
+        select b.name,b.position from t_ortherlink a left join t_vipinfo b on a.vipid=b.id
+        WHERE 1=1
+        <if test="zjhm != null and zjhm != ''">
+            AND a.otel=#{zjhm}
+        </if>
+    </select>
+
+    <select id="findbyucid" resultType="pd" parameterType="pd">
+        select DATE_FORMAT(kssj,'%Y-%m-%d %H:%i:%s') AS kssj,zjhm,hwlsh from tthjl where 1=1
+        <if test="ucid != null and ucid != ''">
+            AND ucid=#{ucid}
+        </if>
+    </select>
+
+    <select id="findnum" resultType="pd" parameterType="pd">
+        SELECT COUNT(id) num FROM tthjl WHERE 1=1
+        <if test="zjhm != null and zjhm != ''">
+            and zjhm=#{zjhm}
+        </if>
+	</select>
+
+    <select id="findCustinfo" resultType="pd" parameterType="pd">
+        SELECT name from t_custom
+        where 1=1
+        <if test="zjhm != null and zjhm != ''">
+            AND find_in_set(#{zjhm},phone)
+        </if>
+    </select>
+
+    <select id="getCZSM" resultType="pd" parameterType="pd">
+        SELECT CZSM FROM tivropt WHERE hwlsh=#{hwlsh} AND CZJG='IVR操作'
+    </select>
+
+<!--    <select id="findCustinfo" resultType="pd" parameterType="pd">-->
+<!--        SELECT a.zjhm,b.name,DATE_FORMAT(a.kssj,'%Y-%m-%d %H:%i:%s') as kssj-->
+<!--        FROM tthjl a LEFT JOIN t_custom b ON FIND_IN_SET(a.zjhm,b.phone)-->
+<!--        where 1=1-->
+<!--        <if test="zjhm != null and zjhm != ''">-->
+<!--            AND find_in_set(#{zjhm},a.zjhm)-->
+<!--        </if>-->
+<!--        <if test="ucid != null and ucid != ''">-->
+<!--            AND a.ucid=#{ucid}-->
+<!--        </if>-->
+<!--    </select>-->
+</mapper>

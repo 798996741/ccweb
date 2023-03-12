@@ -1,0 +1,355 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ZxlbMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		TZXLB
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		ID,  
+  		DJRQ,  
+  		FJHM,  
+  		ZXID,
+  		ZXRQ,
+  		ZXXM,
+  		ZT,
+  		ZXZ,
+  		ZXLX,
+  		ZXYH,
+  		ZXGH,
+  		PWD,
+  		TOKENID,
+  		ZXJS,
+  		dept,
+  		ROLE_ID
+  		
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{ID}, 
+  		now(),  
+  		#{FJHM},  
+  		#{ZXID},
+  		#{ZXRQ},
+  		#{ZXXM},
+  		#{ZT},
+  		#{ZXZ},
+  		#{ZXLX},
+  		#{ZXYH},
+  		#{ZXGH},
+  		#{PWD},
+  		#{TOKENID},
+  		#{ZXJS},
+  		#{dept},
+  		#{ROLE_ID}
+  		
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			ID = #{ID}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+			<include refid="tableName"></include>
+		set 
+  			DJRQ=now(),
+  			FJHM=#{FJHM},   
+  			ZXID=#{ZXID},
+  			ZXXM=#{ZXXM},
+  			ZT=#{ZT},
+  			ZXZ=#{ZXZ},
+  			ZXLX=#{ZXLX},
+  			ZXYH=#{ZXYH},
+  			ZXGH=#{ZXGH},
+  			ZXJS=#{ZXJS},
+  			ROLE_ID=#{ROLE_ID},
+  			dept=#{dept}
+  			<if test="PWD!= null and PWD != ''">
+				,PWD = #{PWD}
+			</if>
+		where 
+		ID = #{ID}
+	</update>
+	
+		<!-- 修改 -->
+	<update id="editTokenid" parameterType="pd">
+		update
+			<include refid="tableName"></include>
+		set 
+  			tokenid=#{TOKENID}
+		where 
+		ZXYH = #{ZXYH}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select a.ID,  
+  		a.DJRQ,  
+  		a.FJHM,  
+  		a.ZXID,
+  		a.ZXRQ,
+  		a.ZXXM,
+  		a.ZT,
+  		a.ZXZ,
+  		a.ZXLX,
+  		a.ZXYH,
+  		a.ZXGH,
+  		a.PWD,
+  		a.TOKENID,
+  		a.ZXJS,
+  		a.dept ,
+  		a.ROLE_ID
+		,b.name as areaname from
+		<include refid="tableName"></include> a
+		left join t_area b on a.dept=b.area_code
+		where 
+			ID = #{ID}
+	</select>
+	
+	
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findByTokenId" parameterType="pd" resultType="pd">
+		select 
+			a.DJRQ,  
+	  		a.FJHM,  
+	  		a.ZXID,
+	  		a.ZXRQ,
+	  		a.ZXXM,
+	  		a.ZT,
+	  		a.ZXZ,
+	  		a.ZXLX,
+	  		a.ZXYH,
+	  		a.ZXGH,
+	  		a.PWD,
+	  		a.TOKENID,
+	  		a.ZXJS,
+	  		a.dept ,
+	  		a.ROLE_ID,
+	  		a.ID,b.ROLE_NAME,b.menu_ids
+		from 
+		<include refid="tableName"></include> a
+		left join sys_role_front b  on a.role_id=b.role_id
+		where 
+			tokenid = #{TOKENID}
+	</select>
+	
+	
+	
+	<!-- 列表 -->
+	<select id="datalist" parameterType="page" resultType="pd">
+		select
+		a.ZXJS,
+		a.ID,  
+  		a.DJRQ,  
+  		a.FJHM,  
+  		a.ZXID,
+  		a.ZXRQ,
+  		a.ZXXM,
+  		a.ZT,
+  		a.ZXZ,
+  		a.ZXLX,
+  		a.ZXYH,
+  		a.ZXGH,
+  		a.dept,
+  		b.ZMC,
+  		a.ROLE_ID,
+  		c.NAME,
+  		group_concat(d.NAME) as ZXLXNAME,
+  		e.NAME as ZXJSNAME,
+  		f.name as areaname,
+  		g.ROLE_NAME
+		from 
+		<include refid="tableName"></include> a
+		left join t_area f on a.dept=f.area_code 
+		left join TZXZ b on a.ZXZ=b.ID
+		left join SYS_USER c on a.ZXYH=c.USERNAME
+		left join SYS_DICTIONARIES d on find_in_set (d.DICTIONARIES_ID,a.ZXLX) 
+		left join SYS_DICTIONARIES e on a.ZXJS=e.DICTIONARIES_ID
+		left join SYS_ROLE_FRONT g on a.ROLE_ID=g.ROLE_ID
+		where 1=1
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+					a.ZXXM LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or 
+					a.ZXYH LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or
+					c.USERNAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					 or 
+					d.NAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					or
+					f.name LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+					or
+					g.ROLE_NAME LIKE CONCAT(CONCAT('%', #{pd.keywords}),'%')
+				
+				)
+		</if>
+		group by a.ID
+		order by a.ZXID desc
+	</select>
+	
+	<!-- 列表(全部) -->
+	<select id="listAll" parameterType="pd" resultType="pd">
+		select
+		a.ZXJS,
+		a.ID,  
+  		a.DJRQ,  
+  		a.FJHM,  
+  		a.ZXID,
+  		a.ZXRQ,
+  		a.ZXXM,
+  		a.ZT,
+  		a.ZXZ,
+  		a.ZXLX,
+  		a.ZXYH,
+  		a.ZXGH,b.ZMC,
+  		a.dept,
+  		a.ROLE_ID,
+  		f.name as areaname
+		from 
+		<include refid="tableName"></include> a
+		left join t_area f on a.dept=f.area_code 
+		left join TZXZ b on a.ZXZ=b.ID
+		where 1=1
+		<if test="ZXZ!= null and ZXZ != ''">
+			and a.ZXZ = #{ZXZ}
+		</if>
+	</select>
+	
+	<!-- 批量删除 -->
+	<delete id="deleteAll" parameterType="String">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			ID in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+             #{item}
+		</foreach>
+	</delete>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findByZxyh" parameterType="pd" resultType="pd">
+		select 
+			a.ZXJS,a.DJRQ,a.FJHM,a.ZXID,a.ZXRQ,a.ZXXM,a.ZT,a.ROLE_ID,
+			a.ZXZ,a.ZXLX,a.ZXYH,a.ZXGH,a.PWD, a.TOKENID,a.ID,a.dept,
+			e.NAME as ZXJSNAME,f.zmc,f.zbh,f.zjn,e.BIANMA,b.ROLE_NAME,b.menu_ids,
+			group_concat(d.NAME) as ZXLXNAME
+		from 
+			<include refid="tableName"></include> a
+			left join SYS_DICTIONARIES e on a.ZXJS=e.DICTIONARIES_ID
+			left join TZXZ f on a.ZXZ=f.ID
+			left join sys_role_front b  on a.role_id=b.role_id
+			left join SYS_DICTIONARIES d on find_in_set (d.DICTIONARIES_ID,a.ZXLX) 
+			
+		where 1=1
+			<if test="ZXYH!= null and ZXYH != ''">
+				and ZXYH= #{ZXYH}
+			</if>
+			<if test="ZXID!= null and ZXID != ''">
+				and ZXID= #{ZXID}
+			</if>
+			
+			<if test="ID!= null and ID != ''">
+				and a.ID != #{ID}
+			</if>
+			<if test="PWD!= null and PWD != ''">
+				and a.PWD = #{PWD}
+			</if>
+			group by a.ID
+	</select>
+	
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findByZxid" parameterType="pd" resultType="pd">
+		select 
+			a.ZXJS,a.DJRQ,a.FJHM,a.ZXID,a.ZXRQ,a.ZXXM,a.ZT,a.ZXZ,a.ZXLX,a.ZXYH,a.ZXGH,a.PWD,a.ROLE_ID, a.TOKENID,a.ID,a.dept,c.ROLE_NAME
+		from 
+			<include refid="tableName"></include> a left join 
+			SYS_USER b on a.zxyh=b.USERNAME
+			left join  SYS_ROLE c on b.ROLE_ID=c.ROLE_ID
+		where 
+			ZXID= #{ZXID}
+			<if test="ID!= null and ID != ''">
+				and ID != #{ID}
+			</if>
+	</select>
+	
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findByParamCode" parameterType="pd" resultType="pd">
+		select 
+			*
+		from 
+			sys_param
+		where 
+			
+			param_code=#{param_code}
+	</select>
+	
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findByZxz" parameterType="pd" resultType="pd">
+		
+		select * from TZXLB t 
+		where 1=1 and ID = #{ID}
+		and  ZXZ in (
+			select  ZXZ from T_CUS_FP where  TASKID = #{TASKID}
+		)	
+	</select>
+	
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findByUsername" parameterType="pd" resultType="pd">
+		select
+		a.ID,
+		a.ZXJS,  
+  		a.DJRQ,  
+  		a.FJHM,  
+  		a.ZXID,
+  		a.ZXRQ,
+  		a.ZXXM,
+  		a.ZT,
+  		a.ZXZ,
+  		a.ZXLX,
+  		a.ZXYH,
+  		a.ZXGH,a.dept,
+  		a.ROLE_ID,
+  		b.ZMC,
+  		c.NAME,
+  		group_concat(d.NAME) as ZXLXNAME,
+  		f.name as areaname
+		from 
+		<include refid="tableName"></include> a
+		left join t_area f on a.dept=f.area_code 
+		left join TZXZ b on a.ZXZ=b.ID
+		left join SYS_USER c on a.ZXYH=c.USERNAME
+		left join SYS_DICTIONARIES d on find_in_set (d.DICTIONARIES_ID,a.ZXLX) 
+		where 1=1
+			and USERNAME = #{USERNAME}
+		group by ID	
+	</select>
+	
+	<!-- 351412933 -->
+</mapper>

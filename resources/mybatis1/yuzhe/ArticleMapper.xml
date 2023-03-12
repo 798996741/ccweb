@@ -1,0 +1,597 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="ArticleMapper">
+    <sql id="Base_Column_List">
+    a.id, article_identifier as articleIdentifier, article_name as articleName, article_detail as articleDetail, article_place as articlePlace, article_lostplace as articleLostplace,
+    Date_format(article_losttime, '%Y-%m-%d %H:%i:%s') as articleLosttime, article_level as articleLevel, Date_format(article_duedate, '%Y-%m-%d %H:%i:%s') as articleDuedate, article_cliam as articleCliam, article_claimant as articleClaimant,
+    is_reportloss as isReportloss, is_eliminate as isEliminate, article_eliminateid as articleEliminateid, finder_id as finderId, create_man as createMan, Date_format(a.create_time, '%Y-%m-%d %H:%i:%s') as createTime,
+    Date_format(a.update_time, '%Y-%m-%d %H:%i:%s') as  updateTime
+  </sql>
+
+    <select id="findArticlelistPage" parameterType="page" resultType="pd">
+        SELECT
+        a.id,
+        a.article_identifier AS articleIdentifier,
+        a.article_name AS articleName,
+        DATE_FORMAT( f.finder_time, '%Y-%m-%d' ) AS finderTime,
+        f.finder_flightNumber AS finderFlightNumber,
+        f.finder_place AS finderPlace,
+        f.finder_name AS finderName,
+        f.finder_tel AS finderTel,
+        a.article_cliam AS articleCliam,(
+        SELECT
+        d.NAME
+        FROM
+        lostandfound_dictionaries d
+        WHERE
+        d.dictionaries_id = a.article_cliam
+        ) AS articleCliamName,
+        a.article_level AS articleLevel,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = a.article_level ) AS articleLevelName,
+        DATE_FORMAT( a.article_duedate, '%Y-%m-%d' ) AS articleDuedate,
+        a.type,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = a.type ) AS typeName,
+        a.sub_type AS subType,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = a.sub_type ) AS subTypeName,
+        a.airport_code AS airportCode,
+        a.air_port AS airPort,
+        a.hand_person_unit AS handPersonUnit,
+        a.lost_picture AS lostPicture,
+        a.registry_Photo AS registryPhoto,
+        a.is_publicity AS isPublicity,
+        a.is_checked AS isChecked,
+        DATE_FORMAT( a.create_time, '%Y-%m-%d' ) AS createTime,
+        a.is_broadcast AS isBroadcast,
+        a.is_call AS isCall,
+        c.cliam_name AS cliamName,
+        c.cliam_flightnumber AS cliamFlightnumber,
+        c.cliam_tel AS cliamTel,
+        c.cliam_idstype AS cliamIdstype,
+        c.cliam_remark AS cliamRemark,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = c.cliam_idstype ) AS cliamIdstypeName,
+        c.cliam_idsnumber AS cliamIdsnumber,
+        c.cliam_mailnumber AS cliamMailnumber,
+        a.lost_Picture_url AS lostPictureUrl,
+        p.cliamPlace AS cliamPlace,
+        (select dictionaries_id from lostandfound_dictionaries where `name` =  p.cliamType and `code` like '001-___') AS cliamType,
+        p.cliamTime AS cliamTime,
+        p.cliamOperator AS cliamOperator,
+        a.is_eliminate AS isEliminate
+        FROM
+        lostandfound_article a
+        LEFT JOIN found_finder f ON a.finder_id = f.id
+        LEFT JOIN lost_cliam c ON c.id = a.article_claimant
+        LEFT JOIN (
+        SELECT
+        p.article_id,
+        p.process_detail AS cliamType,
+        p.receive_place AS cliamPlace,
+        Date_format( p.create_time, '%Y-%m-%d %H:%i:%s' ) AS cliamTime,
+        zx.zxxm AS cliamOperator
+        FROM
+        lostandfound_process p
+        LEFT JOIN tzxlb zx ON zx.id = p.user_id
+        WHERE
+        p.process_type = '316125bd-dd36-11ea-bd5a-fa163e003af7'
+        AND p.create_time = ( SELECT max( create_time ) FROM lostandfound_process WHERE article_id = p.article_id )) p ON p.article_id = a.id
+        WHERE
+        a.is_reportloss = 0
+        AND a.isdel = 0
+        <if test="pd.overdue == 1">
+        AND a.article_duedate &lt;= now()
+        </if>
+        <if test="pd.id != null and pd.id != ''">
+            and a.id = #{pd.id}
+        </if>
+        <if test="pd.articleName != null and pd.articleName != ''">
+            and a.article_name like binary concat('%',#{pd.articleName},'%')
+        </if>
+        <if test="pd.finderPlace != null and pd.finderPlace != ''">
+            and f.finder_place like binary concat('%',#{pd.finderPlace},'%')
+        </if>
+        <if test="pd.articleCliam != null and pd.articleCliam != ''">
+            and a.article_cliam like binary concat('%',#{pd.articleCliam},'%')
+        </if>
+        <if test="pd.startTime!=null and pd.startTime!=''">
+            and f.finder_time &gt;= #{pd.startTime}
+        </if>
+        <if test="pd.endTime!=null and pd.endTime!=''">
+            and f.finder_time &lt;= #{pd.endTime}
+        </if>
+        <if test="pd.id != null and pd.id != ''">
+            and a.id = #{pd.id}
+        </if>
+         <if test="pd.articleLevel != null and pd.articleLevel != ''">
+             and a.article_level = #{pd.articleLevel}
+        </if>
+        <if test="pd.keywords != null and pd.keywords != ''">
+            and
+            a.article_identifier like binary concat('%',#{pd.keywords},'%') or
+            a.article_name like binary concat('%',#{pd.keywords},'%') or
+            f.finder_time like binary concat('%',#{pd.keywords},'%') or
+            f.finder_flightNumber like binary concat('%',#{pd.keywords},'%') or
+            f.finder_place like binary concat('%',#{pd.keywords},'%') or
+            f.finder_name like binary concat('%',#{pd.keywords},'%') or
+            f.finder_tel like binary concat('%',#{pd.keywords},'%') or
+            a.article_cliam like binary concat('%',#{pd.keywords},'%') or
+            a.article_duedate like binary concat('%',#{pd.keywords},'%') or
+            a.air_port like binary concat('%',#{pd.keywords},'%')
+        </if>
+        order by a.create_time desc
+    </select>
+
+    <select id="findArticlelist" parameterType="pd" resultType="pd">
+        SELECT
+        a.article_identifier AS articleIdentifier,
+        a.article_name AS articleName,
+        a.article_detail AS articleDetail,
+        ( CASE a.is_publicity WHEN '0' THEN '公示' WHEN '1' THEN '不公示' ELSE '错误' END ) AS isPublicName,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = a.type ) AS typeName,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = a.sub_type ) AS subTypeName,
+        f.finder_place AS finderPlace,
+        DATE_FORMAT( f.finder_time, '%Y-%m-%d' ) AS finderTime,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = a.article_level ) AS articleLevelName,(
+        SELECT
+        d.NAME
+        FROM
+        lostandfound_dictionaries d
+        WHERE
+        d.dictionaries_id = a.article_cliam
+        ) AS articleCliamName,
+        f.finder_name AS finderName,
+        f.finder_tel AS finderTel,
+        DATE_FORMAT( a.article_duedate, '%Y-%m-%d %H:%i:%s' ) AS articleDuedate,
+        f.finder_flightNumber AS finderFlightNumber,
+        a.create_man AS createMan,
+        DATE_FORMAT( a.create_time, '%Y-%m-%d %H:%i:%s' ) AS createTime,
+        DATE_FORMAT( a.update_time, '%Y-%m-%d %H:%i:%s' ) AS createTime
+        FROM
+        lostandfound_article a
+        LEFT JOIN found_finder f ON a.finder_id = f.id
+        WHERE
+        a.is_reportloss = 0
+        AND isdel = 0
+        <if test="id != null and id != ''">
+            and a.id = #{id}
+        </if>
+        <if test="articleName != null and articleName != ''">
+            and a.article_name like binary concat('%',#{articleName},'%')
+        </if>
+        <if test="finderPlace != null and finderPlace != ''">
+            and f.finder_place like binary concat('%',#{finderPlace},'%')
+        </if>
+        <if test="articleCliam != null and articleCliam != ''">
+            and a.article_cliam like binary concat('%',#{articleCliam},'%')
+        </if>
+        <if test="startTime!=null and startTime!=''">
+            and f.finder_time &gt;= #{startTime}
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            and f.finder_time &lt;= #{endTime}
+        </if>
+        <if test="id != null and id != ''">
+            and a.id = #{id}
+        </if>
+        <if test="articleLevel != null and articleLevel != ''">
+            and a.article_level = #{articleLevel}
+        </if>
+        <if test="keywords != null and keywords != ''">
+            and
+            a.article_identifier like binary concat('%',#{keywords},'%') or
+            a.article_name like binary concat('%',#{keywords},'%') or
+            f.finder_time like binary concat('%',#{keywords},'%') or
+            f.finder_flightNumber like binary concat('%',#{keywords},'%') or
+            f.finder_place like binary concat('%',#{keywords},'%') or
+            f.finder_name like binary concat('%',#{keywords},'%') or
+            f.finder_tel like binary concat('%',#{keywords},'%') or
+            a.article_cliam like binary concat('%',#{keywords},'%') or
+            a.article_duedate like binary concat('%',#{keywords},'%') or
+            a.air_port like binary concat('%',#{keywords},'%')
+        </if>
+        order by a.create_time desc
+    </select>
+
+    <select id="countArticle" parameterType="pd" resultType="pd">
+    select count(id) as `count` from lostandfound_article
+  </select>
+
+    <update id="deleteArticleById" parameterType="pd" >
+    <if test="id != null and id != ''">
+        UPDATE lostandfound_article SET isdel = '1',deltime = now()  WHERE id = #{id};
+    </if>
+    </update>
+
+
+    <insert id="saveArticle" parameterType="pd" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO `lostandfound_article` (
+        `article_identifier`,
+        `article_name`,
+        `article_detail`,
+        `article_place`,
+        `article_level`,
+        `article_duedate`,
+        `article_cliam`,
+        `is_reportloss`,
+        `is_eliminate`,
+        `finder_id`,
+        `create_man`,
+        `create_time`,
+        `update_time`,
+        `is_receive`,
+        `type`,
+        `sub_type`,
+        `airport_code`,
+        `is_publicity`,
+        `is_checked`,
+        `hand_person_unit`,
+        `air_port`,
+        `lost_picture`,
+        `registry_Photo`,
+        `is_broadcast`,
+        `is_call`,
+        `lost_picture_url`
+        )
+        VALUES
+        (#{articleIdentifier}, #{articleName}, #{articleDetail}, #{receivePlace},#{articleLevel},
+       #{articleDuedate},'fc269080-d879-11ea-bd5a-fa163e003af7', 0,0,#{finderId}, #{createMan}, now(), now(),'0',
+       #{type},#{subType},#{airportCode},#{isPublicity},#{isChecked},#{handPersonUnit},#{airPort},#{lostPicture},
+       #{registryPhoto},#{isBroadcast},#{isCall},#{lostPictureUrl})
+    </insert>
+
+    <select id="findArticleById" parameterType="pd" resultType="pd">
+        SELECT
+        a.id AS id,
+        article_name AS articleName,
+        a.article_claimant AS articleClaimant,
+        a.article_level AS articleLevel,
+        ( SELECT pl.receive_place FROM lostandfound_process pl WHERE a.id = pl.article_id ORDER BY create_time DESC LIMIT 1 ) AS receivePlace,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = a.article_level ) AS articleLevelName,
+        article_detail AS articleDetail,
+        a.article_cliam AS articleCliam,(
+        SELECT
+        d.NAME
+        FROM
+        lostandfound_dictionaries d
+        WHERE
+        d.dictionaries_id = a.article_cliam
+        ) AS articleCliamName,
+        a.qr_code AS qrCode,
+        a.create_man AS createMan,
+        Date_format( a.create_time, '%Y-%m-%d %H:%i:%s' ) AS createTime,
+        Date_format( a.update_time, '%Y-%m-%d %H:%i:%s' ) AS updateTime,
+        Date_format( article_duedate, '%Y-%m-%d %H:%i:%s' ) AS articleDuedate,
+        f.finder_flightNumber AS finderFlightNumber,
+        Date_format( f.finder_time, '%Y-%m-%d %H:%i:%s' ) AS finderTime,
+        f.finder_place AS finderPlace,
+        a.finder_id AS finderId,
+        f.finder_name AS finderName,
+        f.finder_tel AS finderTel,
+        f.finder_place AS finderPlace,
+        a.type,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = a.type ) AS typeName,
+        a.sub_type AS subType,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = a.sub_type ) AS subTypeName,
+        a.airport_code AS airportCode,
+        a.air_port AS airPort,
+        a.hand_person_unit AS handPersonUnit,
+        a.lost_picture AS lostPicture,
+        a.registry_Photo AS registryPhoto,
+        (select file_path from lostandfound_file lf where a.lost_picture=lf.id) as lostPictureLocalUrl,
+        (select file_path from lostandfound_file lf where a.registry_Photo=lf.id) as registryPhotoLocalUrl,
+        a.is_publicity AS isPublicity,
+        a.is_checked AS isChecked,
+        a.article_identifier AS articleIdentifier,
+        a.is_broadcast AS isBroadcast,
+        a.is_call AS isCall,
+        c.cliam_name AS cliamName,
+        c.cliam_flightnumber AS cliamFlightnumber,
+        c.cliam_tel AS cliamTel,
+        c.cliam_idstype AS cliamIdstype,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = c.cliam_idstype ) AS cliamIdstypeName,
+        c.cliam_idsnumber AS cliamIdsnumber,
+        c.cliam_mailnumber AS cliamMailnumber,
+        c.cliam_remark AS cliamRemark,
+        a.lost_Picture_url AS lostPictureUrl,
+        p.cliamPlace AS cliamPlace,
+        (select dictionaries_id from lostandfound_dictionaries where `name` =  p.cliamType and `code` like '001-___') AS cliamType,
+        p.cliamTime AS cliamTime,
+        p.cliamOperator AS cliamOperator
+        FROM
+        lostandfound_article a
+        LEFT JOIN found_finder f ON a.finder_id = f.id
+        LEFT JOIN lost_cliam c ON c.id = a.article_claimant
+        LEFT JOIN (
+        SELECT
+        p.article_id,
+        p.process_detail AS cliamType,
+        p.receive_place AS cliamPlace,
+        Date_format( p.create_time, '%Y-%m-%d %H:%i:%s' ) AS cliamTime,
+        zx.zxxm AS cliamOperator
+        FROM
+        lostandfound_process p
+        LEFT JOIN tzxlb zx ON zx.id = p.user_id
+        WHERE
+        p.process_type = '316125bd-dd36-11ea-bd5a-fa163e003af7'
+        AND p.create_time = ( SELECT max( create_time ) FROM lostandfound_process WHERE article_id = p.article_id )) p ON p.article_id = a.id
+            <where>
+           <if test=" id != null and id != ''">
+           a.id = #{id}
+            </if>
+            <if test="articleIdentifier!=null and articleIdentifier!=''">
+                and a.article_identifier = #{articleIdentifier}
+            </if>
+            </where>
+
+    </select>
+
+    <select id="findArticlesById" parameterType="pd" resultType="pd">
+        SELECT
+        a.id AS id,
+        article_name AS articleName,
+        a.article_claimant AS articleClaimant,
+        a.article_level AS articleLevel,
+        ( SELECT pl.receive_place FROM lostandfound_process pl WHERE a.id = pl.article_id ORDER BY create_time DESC LIMIT 1 ) AS receivePlace,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = a.article_level ) AS articleLevelName,
+        article_detail AS articleDetail,
+        a.article_cliam AS articleCliam,(
+        SELECT
+        d.NAME
+        FROM
+        lostandfound_dictionaries d
+        WHERE
+        d.dictionaries_id = a.article_cliam
+        ) AS articleCliamName,
+        a.qr_code AS qrCode,
+        a.create_man AS createMan,
+        Date_format( a.create_time, '%Y-%m-%d %H:%i:%s' ) AS createTime,
+        Date_format( a.update_time, '%Y-%m-%d %H:%i:%s' ) AS updateTime,
+        Date_format( article_duedate, '%Y-%m-%d %H:%i:%s' ) AS articleDuedate,
+        f.finder_flightNumber AS finderFlightNumber,
+        Date_format( f.finder_time, '%Y-%m-%d %H:%i:%s' ) AS finderTime,
+        f.finder_place AS finderPlace,
+        a.finder_id AS finderId,
+        f.finder_name AS finderName,
+        f.finder_tel AS finderTel,
+        f.finder_place AS finderPlace,
+        a.type,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = a.type ) AS typeName,
+        a.sub_type AS subType,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = a.sub_type ) AS subTypeName,
+        a.airport_code AS airportCode,
+        a.air_port AS airPort,
+        a.hand_person_unit AS handPersonUnit,
+        a.lost_picture AS lostPicture,
+        a.registry_Photo AS registryPhoto,
+        (select file_path from lostandfound_file lf where a.lost_picture=lf.id) as lostPictureLocalUrl,
+        (select file_path from lostandfound_file lf where a.registry_Photo=lf.id) as registryPhotoLocalUrl,
+        a.is_publicity AS isPublicity,
+        a.is_checked AS isChecked,
+        a.article_identifier AS articleIdentifier,
+        a.is_broadcast AS isBroadcast,
+        a.is_call AS isCall,
+        c.cliam_name AS cliamName,
+        c.cliam_flightnumber AS cliamFlightnumber,
+        c.cliam_tel AS cliamTel,
+        c.cliam_idstype AS cliamIdstype,
+        ( SELECT d.NAME FROM lostandfound_dictionaries d WHERE d.dictionaries_id = c.cliam_idstype ) AS cliamIdstypeName,
+        c.cliam_idsnumber AS cliamIdsnumber,
+        c.cliam_mailnumber AS cliamMailnumber,
+        c.cliam_remark AS cliamRemark,
+        a.lost_Picture_url AS lostPictureUrl,
+        p.cliamPlace AS cliamPlace,
+        p.cliamType AS cliamType,
+        p.cliamTime AS cliamTime,
+        p.cliamOperator AS cliamOperator
+        FROM
+        lostandfound_article a
+        LEFT JOIN found_finder f ON a.finder_id = f.id
+        LEFT JOIN lost_cliam c ON c.id = a.article_claimant
+        LEFT JOIN (
+        SELECT
+        p.article_id,
+        p.process_detail AS cliamType,
+        p.receive_place AS cliamPlace,
+        Date_format( p.create_time, '%Y-%m-%d %H:%i:%s' ) AS cliamTime,
+        zx.zxxm AS cliamOperator
+        FROM
+        lostandfound_process p
+        LEFT JOIN tzxlb zx ON zx.id = p.user_id
+       where
+        p.process_type = '316125bd-dd36-11ea-bd5a-fa163e003af7'
+        AND p.create_time = ( SELECT max( create_time ) FROM lostandfound_process WHERE article_id = p.article_id )) p ON p.article_id = a.id
+        <where>
+       <foreach collection="ids.split(',')" item="id" separator="or">
+                a.id=#{id}
+        </foreach>
+        </where>
+
+    </select>
+
+        <update id="updateArticleById" parameterType="pd">
+    UPDATE lostandfound_article SET
+        article_name = #{articleName},
+        article_level = #{articleLevel},
+        article_cliam = #{articleCliam},
+        article_duedate = #{articleDuedate},
+        article_detail = #{articleDetail},
+        `type` = #{type},
+        sub_type = #{subType},
+        airport_code = #{airportCode},
+        is_publicity = #{isPublicity},
+        is_checked = #{isChecked},
+        hand_person_unit = #{handPersonUnit},
+        air_port = #{airPort},
+        lost_picture = #{lostPicture},
+        registry_Photo = #{registryPhoto},
+        is_broadcast = #{isBroadcast},
+        is_call = #{isCall},
+        lost_Picture_url = #{lostPictureUrl}
+        WHERE id = #{id}
+    </update>
+
+
+
+    <insert id="batchInsert"  parameterType="list">
+        insert into lostandfound_article(article_identifier, article_name,
+        article_level, article_detail, article_place, article_duedate, article_cliam,is_reportloss,
+        create_man,create_time,update_time,loster_id,is_eliminate)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.articleIdentifier}, #{item.articleName}, #{item.articleLevel},#{item.articleDetail},
+            #{item.articlePlace},#{item.articleDuedate},'fc269080-d879-11ea-bd5a-fa163e003af7', 0, #{item.createMan}, now(), now(), #{item.losterId}, '0')
+        </foreach>
+
+    </insert>
+
+
+    <insert id="insertError"  parameterType="list">
+        insert into tesp_lostandfound_article_error(article_name,
+        article_level, article_detail, article_lostplace,article_losttime,
+        loster_id,pcbh,ycstr,ycstrs)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.article_name}, #{item.article_level},#{item.article_detail},
+            #{item.article_lostplace}, #{item.article_losttime},#{item.losterId},
+            #{item.pcbh},
+            #{item.ycstr},
+            #{item.ycstrs}
+            )
+        </foreach>
+    </insert>
+
+
+    <insert id="saveClaimant" parameterType="pd" useGeneratedKeys="true" keyProperty="id">
+       INSERT INTO `lost_cliam` ( `id`, `cliam_name`, `cliam_tel`, `cliam_flightnumber`, `cliam_flighttime`, `cliam_idstype`, `cliam_idsnumber`, `cliam_mailnumber`, `create_time`, `update_time`,`cliam_remark` )
+        values(#{Id},#{cliamName},#{cliamTel},#{cliamFlightnumber},#{cliamFlighttime},#{cliamIdstype},#{cliamIdsnumber},#{cliamMailnumber},#{createTime},#{updateTime},#{cliamRemark})
+    </insert>
+
+    <insert id="updateClaimant" parameterType="pd">
+        UPDATE `lost_cliam`
+        SET `cliam_name` = #{cliamName},
+        `cliam_tel` = #{cliamTel},
+        `cliam_flightnumber` = #{cliamFlightnumber},
+        `cliam_idstype` = #{cliamIdstype},
+        `cliam_idsnumber` = #{cliamIdsnumber},
+        `cliam_mailnumber` = #{cliamMailnumber},
+        `update_time` = now(),
+        `cliam_remark` = #{cliamRemark}
+        WHERE
+    	`id` = #{id}
+    </insert>
+
+    <update id="updArticleToClaimant" parameterType="pd">
+        update lostandfound_article set
+        article_claimant=#{articleClaimant},
+        article_cliam=#{articleClaim},
+        is_receive=1
+        where
+        id=#{articleId}
+    </update>
+
+    <update id="updArticleToReceive" parameterType="pd">
+        update lostandfound_article set
+        article_cliam=#{articleClaim},
+        update_time = now()
+        where id=#{id}
+    </update>
+
+    <update id="OverdueAgain">
+        update lostandfound_article set
+        article_duedate=#{articleDuedate},
+        update_time = now()
+        where id=#{id}
+    </update>
+
+    <update id="updateArticlePublicity" parameterType="String">
+        update lostandfound_article set
+        is_publicity = 1
+        <where>
+        <foreach collection="_parameter.split(',')" item="id" separator="or">
+            id=#{id}
+        </foreach>
+        </where>
+    </update>
+
+    <select id="articleTodayCount" parameterType="pd" resultType="int">
+        select count(id) as 'count' from lostandfound_article
+        where create_time >=  CONCAT(DATE_ADD(curdate(),interval -day(curdate())+1 day), ' 00:00:00')
+        <if test="isReportloss != null and isReportloss != ''">
+            and is_reportloss = #{isReportloss}
+        </if>
+    </select>
+
+    <select id="toMailCount" parameterType="pd" resultType="int">
+       	SELECT
+				COUNT(a.id) AS `toMail`
+		FROM
+		`lostandfound_article` a
+		where article_cliam = "520dbd4d-d87a-11ea-bd5a-fa163e003af7"
+    </select>
+
+    <select id="claimStatusCount" parameterType="pd" resultType="pd">
+SELECT
+	'未领取' AS `name`,
+	COUNT(
+	CASE
+
+			WHEN a.article_Cliam IN ( SELECT d.dictionaries_id FROM lostandfound_dictionaries d WHERE d.remark = 1 AND CODE LIKE '001-___' ) THEN
+			1 ELSE NULL
+		END
+		) AS 'value'
+	FROM
+		lostandfound_article a
+	WHERE
+		a.is_reportloss = 0
+		AND a.isdel = 0
+        <if test="startTime!=null and startTime!=''">
+            and a.create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            and a.create_time &lt;= #{endTime}
+        </if>
+		UNION ALL
+
+	SELECT
+		'已领取' AS `name`,
+		COUNT(
+		CASE
+
+				WHEN a.article_Cliam IN ( SELECT d.dictionaries_id FROM lostandfound_dictionaries d WHERE d.remark = 5 AND CODE LIKE '001-___' ) THEN
+				1 ELSE NULL
+			END
+			) AS 'value'
+		FROM
+			lostandfound_article a
+		WHERE
+		a.is_reportloss = 0
+	AND a.isdel = 0
+        <if test="startTime!=null and startTime!=''">
+            and a.create_time &gt;= #{startTime}
+        </if>
+        <if test="endTime!=null and endTime!=''">
+            and a.create_time &lt;= #{endTime}
+        </if>
+    </select>
+
+    <select id="articleYearCount" resultType="pd" parameterType="pd">
+        SELECT
+	COUNT(case when month(a.create_time) = 1 and year(a.create_time) = #{year} then 1  else null end) AS '1',
+	COUNT(case when month(a.create_time) = 2 and year(a.create_time) = #{year} then 1  else null end)AS '2',
+	COUNT(case when month(a.create_time) = 3 and year(a.create_time) = #{year} then 1  else null end)AS '3',
+	COUNT(case when month(a.create_time) = 4 and year(a.create_time) = #{year} then 1  else null end)AS '4',
+	COUNT(case when month(a.create_time) = 5 and year(a.create_time) = #{year} then 1  else null end)AS '5',
+	COUNT(case when month(a.create_time) = 6 and year(a.create_time) = #{year} then 1  else null end)AS '6',
+	COUNT(case when month(a.create_time) = 7 and year(a.create_time) = #{year} then 1  else null end)AS '7',
+	COUNT(case when month(a.create_time) = 8 and year(a.create_time) = #{year} then 1  else null end)AS '8',
+	COUNT(case when month(a.create_time) = 9 and year(a.create_time) = #{year} then 1  else null end)AS '9',
+	COUNT(case when month(a.create_time) = 10 and year(a.create_time) = #{year} then 1  else null end)AS '10',
+	COUNT(case when month(a.create_time) = 11 and year(a.create_time) = #{year} then 1  else null end)AS '11',
+	COUNT(case when month(a.create_time) = 12 and year(a.create_time) = #{year} then 1  else null end)AS '12'
+	FROM
+		lostandfound_article a
+	WHERE
+		a.is_reportloss = 0
+		AND a.isdel = 0
+    </select>
+
+</mapper>

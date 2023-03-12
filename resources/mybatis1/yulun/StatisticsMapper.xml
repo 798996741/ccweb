@@ -1,0 +1,1219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="StatisticsMapper">
+
+    <select id="zxCallNumCount" resultType="pd" parameterType="pd">
+		SELECT COUNT(id) callnum,IFNULL(zxid,#{zxid}) zxid
+		FROM tthjl WHERE 1=1
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and kssj BETWEEN #{starttime} and #{endtime}
+		</if>
+		<if test="thfx != null and thfx != ''">
+			and thfx=#{thfx}
+		</if>
+		<if test="inmark != null and inmark != ''">
+			and LENGTH(zjhm) &lt; 10
+		</if>
+		<if test="zxid != null and zxid != ''">
+			and zxid = #{zxid}
+		</if>
+		<if test="zxid == null or zxid == ''">
+			GROUP BY zxid
+		</if>
+
+	</select>
+
+	<select id="zxCallNumSum" resultType="pd" parameterType="pd">
+		SELECT SUM(thsj) thnum,zxid
+		FROM tthjl_zxjtls WHERE 1=1
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and kssj BETWEEN #{starttime} and #{endtime}
+		</if>
+		<if test="thfx != null and thfx != ''">
+			and thfx=#{thfx}
+		</if>
+		<if test="inmark != null and inmark != ''">
+			and LENGTH(fjhm) &lt; 10
+		</if>
+		<if test="zxid != null and zxid != ''">
+			and zxid = #{zxid}
+		</if>
+		<if test="zxid == null or zxid == ''">
+			GROUP BY zxid
+		</if>
+	</select>
+
+	<select id="getxzid" resultType="pd" parameterType="pd">
+		select distinct(zxid) from tzxlb where 1=1
+		<if test="zxid != null and zxid != ''">
+			and zxid = #{zxid}
+		</if>
+	</select>
+	
+	<select id="getcgjtl" parameterType="pd" resultType="pd">
+		select COUNT(a.id) cgjtl,a.zxid from tthjl a,tthjl_zxjtls b where 1=1
+		<if test="zxid != null and zxid != ''">
+			and a.zxid = #{zxid}
+		</if>
+		<if test="zxid == null or zxid == ''">
+			GROUP BY a.zxid
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and a.kssj BETWEEN #{starttime} and #{endtime}
+		</if>
+	</select>
+
+	<select id="getxlfql" parameterType="pd" resultType="pd">
+		select COUNT(id) xlfql,zxid from tthjl
+		<if test="zxid != null and zxid != ''">
+			and zxid = #{zxid}
+		</if>
+		<if test="zxid == null or zxid == ''">
+			GROUP BY zxid
+		</if>
+		<if test="starttime!=null and starttime!='' and endtime!=null and endtime!=''">
+			and kssj BETWEEN #{starttime} and #{endtime}
+		</if>
+	</select>
+
+	<select id="getuser" parameterType="pd" resultType="pd">
+		select zxid,zxxm from tzxlb
+	</select>
+
+<!--	操作明细-->
+	<select id="zxopeloglistPage" parameterType="page" resultType="pd">
+		SELECT b.id,b.zx,DATE_FORMAT(b.fssj,'%Y-%m-%d %H:%i:%s') as fssj,b.note,b.czxm,a.zxxm FROM tzxlb a,tzxczrz b WHERE b.zx=a.zxid
+		<if test="pd.userids != null and pd.userids != ''">
+			<if test="pd.userids.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="pd.userids.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},zx)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},zx)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zx = #{pd.zxid}
+		</if>
+		<if test="pd.starttime!=null and pd.starttime!='' and pd.starttime!='undefined' and pd.endtime!=null and pd.endtime!='' and pd.endtime!='undefined'">
+			and fssj BETWEEN #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.keywords!=null and pd.keywords!='' and pd.keywords!='undefined'" >
+			AND (
+			b.zx like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.fssj like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.note like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			b.czxm like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			a.zxxm like binary CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			)
+		</if>
+		order by fssj desc
+	</select>
+
+	<select id="zxopelog" parameterType="pd" resultType="pd">
+		SELECT b.id,b.zx,DATE_FORMAT(b.fssj,'%Y-%m-%d %H:%i:%s') as fssj,b.note,b.czxm,a.zxxm FROM tzxlb a,tzxczrz b WHERE b.zx=a.zxid
+		<if test="userids != null and userids != ''">
+			<if test="userids.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="userids.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},zx)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},zx)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+		<if test="zxid != null and zxid != ''">
+			and zx = #{zxid}
+		</if>
+		<if test="starttime!=null and starttime!='' and starttime!='undefined' and endtime!=null and endtime!='' and endtime!='undefined'">
+			and fssj BETWEEN #{starttime} and #{endtime}
+		</if>
+		<if test="keywords!=null and keywords!='' and keywords!='undefined'" >
+			AND (
+			b.zx like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			b.fssj like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			b.note like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			b.czxm like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			a.zxxm like binary CONCAT(CONCAT('%', #{keywords}),'%')
+			)
+		</if>
+		order by fssj desc
+	</select>
+
+	<!--坐席通话明细-->
+	<select id="zxcallloglistPage" parameterType="page" resultType="pd">
+		SELECT d.id,
+		d.bcsj,
+		d.bjhm,
+		d.ddsj,
+		d.fwsj,
+		d.gjyy,
+        (case d.thlx when d.thlx='1' then '电话'
+        when d.thlx='2' then '在线'
+		when d.thlx='3' then '视频' else '' end ) thlx,
+		d.fwzt,
+		d.hwlsh,
+		d.jnid,
+		DATE_FORMAT(d.jssj,'%Y-%m-%d %H:%i:%s') AS jssj,
+		d.khpj,
+		DATE_FORMAT(d.kssj,'%Y-%m-%d %H:%i:%s') AS kssj,
+		d.rq,
+		d.shclsj,
+		d.thsj,
+		d.ucid,
+		d.zjdh,
+		d.zjhm,
+		d.zxid,
+		d.yzzt,
+		d.khh,
+        (case  when d.thfx='0' then '呼入'
+        when d.thfx='1' then '呼出' else '' end) thfx,
+		d.hdhm,
+		d.hdxm,
+		a.zxxm,
+		d.url,
+		d.sendurl,
+		b.lywj FROM tthjl d
+		LEFT JOIN tzxlb a ON d.zxid=a.zxid
+		LEFT JOIN (SELECT
+		DATE_FORMAT(a.lysj, '%Y-%m-%d %H:%i:%s')                                       lysj,
+		a.ucid,
+		CONCAT(CONCAT(b.param_value, DATE_FORMAT(a.lysj, '%Y-%m-%d'), '/'), a.lywj) AS lywj
+		FROM tRecord a,
+		sys_param b
+		WHERE a.lylx = '坐席录音'
+		AND b.param_code = 'recordsvr'
+		GROUP BY lysj
+		ORDER BY lysj DESC) b ON d.ucid=b.ucid
+		where 1=1
+		<if test="pd.userids != null and pd.userids != ''">
+			<if test="pd.userids.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="pd.userids.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},d.zxid)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},d.zxid)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+        <if test="pd.thlx != null and pd.thlx != ''">
+            and d.thlx = #{pd.thlx}
+        </if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and d.zxid = #{pd.zxid}
+		</if>
+		<if test="pd.zjhm != null and pd.zjhm != ''">
+			and d.zjhm = #{pd.zjhm}
+		</if>
+		<if test="pd.thfx != null and pd.thfx != ''">
+			and d.thfx = #{pd.thfx}
+		</if>
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and d.kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.keywords!=null and pd.keywords!='' and pd.keywords!='undefined'" >
+			AND (
+			(case d.thlx when d.thlx='1' then '电话'
+			when d.thlx='2' then '在线'
+			when d.thlx='3' then '视频' else '' end ) like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			d.ddsj like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			d.bcsj like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			d.bjhm like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			d.ddsj like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			d.fwsj like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			d.khpj like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			d.jssj like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			d.kssj like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			d.zjhm like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			a.zxxm like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+			(case d.thfx when d.thfx='0' then '呼入'
+			when d.thfx='1' then '呼出' else '' end) like binary CONCAT(CONCAT('%', #{pd.keywords}),'%')
+			)
+		</if>
+		order by d.kssj desc
+	</select>
+	<select id="zxcalllog" parameterType="pd" resultType="pd">
+		SELECT d.id,
+		d.bcsj,
+		d.bjhm,
+		d.ddsj,
+		d.fwsj,
+		ifnull(d.gjyy,'') gjyy,
+		(case d.thlx when d.thlx='1' then '电话'
+		when d.thlx='2' then '在线'
+		when d.thlx='3' then '视频' else '' end ) thlx,
+		d.fwzt,
+		d.hwlsh,
+		d.jnid,
+		DATE_FORMAT(d.jssj,'%Y-%m-%d %H:%i:%s') AS jssj,
+		ifnull(d.khpj,'') khpj,
+		DATE_FORMAT(d.kssj,'%Y-%m-%d %H:%i:%s') AS kssj,
+		d.rq,
+		d.shclsj,
+		d.thsj,
+		d.ucid,
+		d.zjdh,
+		d.zjhm,
+		d.zxid,
+		d.yzzt,
+		d.khh,
+        d.sendurl,
+		(case d.thfx when d.thfx='0' then '呼入'
+		when d.thfx='1' then '呼出' else '' end) thfx,
+		d.hdhm,
+		d.hdxm,
+		a.zxxm,
+		b.lywj FROM tthjl d
+		LEFT JOIN tzxlb a ON d.zxid=a.zxid
+		LEFT JOIN (SELECT
+		DATE_FORMAT(a.lysj, '%Y-%m-%d %H:%i:%s')                                       lysj,
+		a.ucid,
+		ifnull(CONCAT(CONCAT(b.param_value, DATE_FORMAT(a.lysj, '%Y-%m-%d'), '/'), a.lywj),'') AS lywj
+		FROM tRecord a,
+		sys_param b
+		WHERE a.lylx = '坐席录音'
+		AND b.param_code = 'recordsvr'
+		GROUP BY lysj
+		ORDER BY lysj DESC) b ON d.ucid=b.ucid
+		where 1=1
+		<if test="userids != null and userids != ''">
+			<if test="userids.indexOf(',') != -1">
+				and (
+				<foreach item="item" index="index" collection="userids.split(',')">
+					<if test="index== 0">
+						find_in_set(${item},d.zxid)
+					</if>
+					<if test="index!= 0">
+						or find_in_set(${item},d.zxid)
+					</if>
+				</foreach>
+				)
+			</if>
+		</if>
+        <if test="thlx != null and thlx != ''">
+            and d.thlx = #{thlx}
+        </if>
+		<if test="zxid != null and zxid != ''">
+			and d.zxid = #{zxid}
+		</if>
+		<if test="zjhm != null and zjhm != ''">
+			and d.zjhm = #{zjhm}
+		</if>
+		<if test="thfx != null and thfx != ''">
+			and d.thfx = #{thfx}
+		</if>
+		<if test="starttime != null and starttime != '' and endtime != null and endtime != ''">
+			and d.kssj between #{starttime} and #{endtime}
+		</if>
+		<if test="keywords!=null and keywords!='' and keywords!='undefined'" >
+			AND (
+			(case d.thlx when d.thlx='1' then '电话'
+			when d.thlx='2' then '在线'
+			when d.thlx='3' then '视频' else '' end ) like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			d.ddsj like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			d.bcsj like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			d.bjhm like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			d.ddsj like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			d.fwsj like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			d.khpj like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			d.jssj like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			d.kssj like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			d.zjhm like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			a.zxxm like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+			(case d.thfx when d.thfx='0' then '呼入'
+			when d.thfx='1' then '呼出' else '' end) like binary CONCAT(CONCAT('%', #{keywords}),'%')
+			)
+		</if>
+		order by d.kssj desc
+	</select>
+<!--	话务量统计-->
+	<select id="ZXHWTJlistPage" resultType="pd" parameterType="Page">
+
+        select * from(
+        select
+        <if test="pd.way=='zxid'">
+            a.zxid,c.zxxm,
+        </if>
+        <if test="pd.way=='day'">
+            DAY(a.kssj) AS time,
+        </if>
+        <if test="pd.way=='month'">
+            MONTH(a.kssj) AS time,
+        </if>
+        <if test="pd.way=='year'">
+            YEAR(a.kssj) AS time,
+        </if>
+        <if test="pd.way=='week'">
+            WEEK(a.kssj) AS time,
+        </if>
+        SUM(CASE WHEN a.thfx='0' THEN 1 ELSE 0 END) zxhrl, -- 呼入量(次)
+        SUM(CASE WHEN b.id IS NOT NULL AND a.thfx='0' THEN 1 ELSE 0 END) zxhrjts,-- 呼入接听量(次)
+        SUM(CASE WHEN b.id IS NOT NULL AND a.thfx='0' and b.thsj&lt;=5 THEN 1 ELSE 0 END) zxwmdhs, -- 5秒短话量
+        SUM(CASE WHEN b.id IS NOT NULL AND a.thfx='0' THEN b.thsj ELSE 0 END) zxhrzsc,-- 呼入通话时长
+        SUM(CASE WHEN a.thfx='1' THEN 1 ELSE 0 END) zxwhs,-- 外呼量(次)
+        SUM(CASE WHEN b.id IS NOT NULL AND a.thfx='1' THEN 1 ELSE 0 END) zxwhjts,-- 外呼接听量(次)
+        SUM(CASE WHEN b.id IS NOT NULL AND a.thfx='1' THEN b.thsj ELSE 0 END) zxthsc,-- 外呼通话时长
+        IFNULL(ROUND(SUM(CASE WHEN b.id IS NOT NULL THEN b.thsj ELSE 0 END)/SUM(CASE WHEN b.id IS NOT NULL THEN 1 ELSE 0 END),0),0) zxpjthsc, -- 平均通话时间
+        SUM(CASE WHEN a.id IS NOT NULL AND a.shclsj!=0 THEN 1 ELSE 0 END) zxshcls, -- 事后处理量
+        SUM(CASE WHEN a.id IS NOT NULL AND a.ddsj!=0 THEN 1 ELSE 0 END) zlsc, -- 振铃时长
+        IFNULL(ROUND(SUM(CASE WHEN a.ddsj!=0 THEN a.ddsj ELSE 0 END)/SUM(CASE WHEN a.ddsj!=0 THEN 1 ELSE 0 END),0),0) pjzlsc, -- 平均振铃时长(秒)
+        IFNULL(ROUND(SUM(CASE WHEN a.id IS NOT NULL AND a.shclsj!=0 THEN a.shclsj ELSE 0 END)/SUM(CASE WHEN a.id IS NOT NULL AND a.shclsj!=0 THEN 1 ELSE 0 END),0),0) zxpjshsc,-- 平均事后工作时间
+        IFNULL(ROUND(SUM(CASE WHEN a.id IS NOT NULL AND a.bcsj!=0 THEN a.bcsj ELSE 0 END)/SUM(CASE WHEN a.id IS NOT NULL AND a.bcsj!=0 THEN 1 ELSE 0 END),0),0) zxpjbcsc,-- 平均保持时长
+        SUM(CASE WHEN a.id IS NOT NULL AND a.bcsj!=0 THEN 1 ELSE 0 END) zxbcs, -- 保持量(次)
+        SUM(CASE WHEN a.id IS NOT NULL AND a.bcsj!=0 THEN a.bcsj ELSE 0 END) zxhbcsc,-- 保持时长
+        SUM(CASE WHEN a.id IS NOT NULL THEN a.fwsj+a.shclsj ELSE 0 END) zxgzzsc,-- 工作总时长
+        SUM(CASE WHEN a.id IS NOT NULL AND a.shclsj!=0 THEN a.shclsj ELSE 0 END) zxshsc,-- 事后处理时长
+        ifnull((select count(id) from tzxczrz e where czxm='11'
+        <if test="pd.way=='day'">
+            and DAY(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='month'">
+            and MONTH(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='year'">
+            and YEAR(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='week'">
+            and WEEK(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='zxid'">
+            and e.zx=a.zxid
+        </if>
+        ),0) zyl,-- 转移量
+        ifnull((select count(id) from tzxczrz e where czxm='9'
+        <if test="pd.way=='day'">
+            and DAY(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='month'">
+            and MONTH(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='year'">
+            and YEAR(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='week'">
+            and WEEK(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='zxid'">
+            and e.zx=a.zxid
+        </if>
+        ),0) zxl, -- 咨询量
+        ifnull((select sum(ljsj) from tzxczrz e where czxm='9'
+        <if test="pd.way=='day'">
+            and DAY(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='month'">
+            and MONTH(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='year'">
+            and YEAR(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='week'">
+            and WEEK(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='zxid'">
+            and e.zx=a.zxid
+        </if>
+        ),0) zxsc, -- 咨询时长
+        ifnull((select sum(ljsj) from tzxczrz e where czxm='4'
+        <if test="pd.way=='day'">
+            and DAY(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='month'">
+            and MONTH(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='year'">
+            and YEAR(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='week'">
+            and WEEK(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='zxid'">
+            and e.zx=a.zxid
+        </if>
+        ),0) zmzsc, -- 置忙总时长
+        ifnull((select count(id) from tzxczrz e where czxm='4'
+        <if test="pd.way=='day'">
+            and DAY(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='month'">
+            and MONTH(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='year'">
+            and YEAR(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='week'">
+            and WEEK(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='zxid'">
+            and e.zx=a.zxid
+        </if>
+        ),0) zmzb, -- 置忙量
+        ifnull((select sum(ljsj) from tzxczrz e where czxm='1'
+        <if test="pd.way=='day'">
+            and DAY(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='month'">
+            and MONTH(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='year'">
+            and YEAR(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='week'">
+            and WEEK(e.fssj)=DAY(a.kssj)
+        </if>
+        <if test="pd.way=='zxid'">
+            and e.zx=a.zxid
+        </if>
+        ),0) dlsc -- 登录时长
+        from tthjl a
+        left join tthjl_zxjtls b on a.id=b.thjl_id
+        left join tzxlb c on a.zxid=c.zxid
+        where 1=1 and a.thlx='1'
+        <if test="pd.userids != null and pd.userids != ''">
+            <if test="pd.userids.indexOf(',') != -1">
+                and (
+                <foreach item="item" index="index" collection="pd.userids.split(',')">
+                    <if test="index== 0">
+                        find_in_set(${item},a.zxid)
+                    </if>
+                    <if test="index!= 0">
+                        or find_in_set(${item},a.zxid)
+                    </if>
+                </foreach>
+                )
+            </if>
+        </if>
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.kssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+
+        <if test="pd.way=='day' or pd.way=='month' or pd.way=='year' or pd.way=='week'">
+            group by time
+        </if>
+        <if test="pd.way=='zxid'">
+            GROUP BY a.zxid
+        </if>
+        )a where 1=1
+        <if test="pd.keywords!=null and pd.keywords!='' and pd.keywords!='undefined'" >
+            AND (
+            <if test="pd.way=='zxid'">
+                zxid like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+                zxxm like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            </if>
+            zxhrl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxwmdhs like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxhrzsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxwhs like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxwhjts like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxthsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxpjthsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxshcls like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zlsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            pjzlsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxpjshsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxpjbcsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxbcs like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxhbcsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxgzzsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxshsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zyl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zmzsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zmzb like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            dlsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%')
+            )
+        </if>
+	</select>
+
+	<select id="timeZXHWTJlistPage" parameterType="Page" resultType="pd">
+		SELECT
+		<if test="pd.way=='day'">
+			DAY(a.kssj) AS time,
+		</if>
+		<if test="pd.way=='month'">
+			MONTH(a.kssj) AS time,
+		</if>
+		<if test="pd.way=='year'">
+			YEAR(a.kssj) AS time,
+		</if>
+		<if test="pd.way=='week'">
+			WEEK(a.kssj) AS time,
+		</if>
+		IFNULL(COUNT(b.id),0) zxhrl ,
+		IFNULL(COUNT(c.id),0) zxhrjts,
+		IFNULL(COUNT(d.id),0) zxwmdhs,
+		IFNULL(SUM(e.fwsj),0) zxhrzsc,
+		IFNULL(COUNT(f.id),0) zxwhs,
+		IFNULL(COUNT(g.id),0) zxwhjts,
+		IFNULL(SUM(h.fwsj),0) zxthsc,
+		IFNULL(AVG(i.fwsj),0) zxpjthsc,
+		IFNULL(COUNT(j.id),0) zxshcls,
+		IFNULL(AVG(k.shclsj),0) zxpjshsc,
+		IFNULL(AVG(l.bcsj),0) zxpjbcsc,
+		IFNULL(COUNT(n.id),0) zxbcs,
+		IFNULL(SUM(m.bcsj),0) zxhbcsc,
+		IFNULL(SUM(o.thsj+o.shclsj),0) zxgzzsc,
+		IFNULL(SUM(p.shclsj),0) zxshsc
+		FROM (SELECT kssj FROM tthjl WHERE 1=1
+		) a
+		LEFT JOIN (SELECT * FROM tthjl WHERE thfx='0'
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) b ON a.kssj=b.kssj
+		LEFT JOIN (SELECT a.*  FROM tthjl a,thwrz b WHERE a.hwlsh=b.hwlsh and a.thfx='0'
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and a.kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) c ON a.kssj=c.kssj
+		LEFT JOIN (SELECT * FROM tthjl WHERE thfx='0' AND thsj &lt;= 5 AND thsj!=0
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) d ON a.kssj=d.kssj
+		LEFT JOIN (SELECT * FROM tthjl WHERE thfx='0' AND thfx!=0
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) e ON a.kssj=e.kssj
+		LEFT JOIN (SELECT * FROM tthjl WHERE thfx='1'
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) f ON a.kssj=f.kssj
+		LEFT JOIN (SELECT * FROM tthjl WHERE thfx='1' AND thfx!=0
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) g ON a.kssj=g.kssj
+		LEFT JOIN (SELECT * FROM tthjl WHERE thfx='1'
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) h ON a.kssj=h.kssj
+		LEFT JOIN (SELECT * FROM tthjl WHERE 1=1
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) i ON a.kssj=i.kssj
+		LEFT JOIN (SELECT * FROM tthjl WHERE shclsj!=0
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) j ON a.kssj=j.kssj
+		LEFT JOIN (SELECT * FROM tthjl WHERE 1=1
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) k ON a.kssj=k.kssj
+		LEFT JOIN (SELECT * FROM tthjl WHERE 1=1
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) l ON a.kssj=l.kssj
+		LEFT JOIN (SELECT * FROM tthjl WHERE bcsj!=0
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) n ON a.kssj=n.kssj
+		LEFT JOIN (SELECT * FROM tthjl WHERE 1=1
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) m ON a.kssj=m.kssj
+		LEFT JOIN (SELECT * FROM tthjl WHERE 1=1
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) o ON a.kssj=o.kssj
+		LEFT JOIN (SELECT * FROM tthjl WHERE 1=1
+		<if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+			and kssj between #{pd.starttime} and #{pd.endtime}
+		</if>
+		<if test="pd.zxid != null and pd.zxid != ''">
+			and zxid=#{pd.zxid}
+		</if>
+		) p ON a.kssj=p.kssj
+		GROUP BY TIME
+	</select>
+
+	<!--满意度统计-->
+	<select id="MYDTJlistPage" resultType="pd" parameterType="page">
+        select * from (
+        SELECT a.zxid,b.zxxm,
+        <if test="pd.way=='day'">
+            DAY(a.kssj) AS time,
+        </if>
+        <if test="pd.way=='month'">
+            MONTH(a.kssj) AS time,
+        </if>
+        <if test="pd.way=='year'">
+            YEAR(a.kssj) AS time,
+        </if>
+        <if test="pd.way=='week'">
+            WEEK(a.kssj) AS time,
+        </if>
+        CONCAT(ifnull(ROUND(SUM(CASE WHEN khpj IS NOT NULL THEN 1 ELSE 0 END)*1.0/COUNT(a.id),0)*100,0),'%') AS cpl,
+        SUM(CASE WHEN khpj=5 THEN 1 ELSE 0 END) fcmy,
+        CONCAT(IFNULL(ROUND(SUM(CASE WHEN khpj=5 THEN 1 ELSE 0 END)/SUM(CASE WHEN khpj IS NOT NULL THEN 1 ELSE 0 END),0),0)*100,'%') AS cpfcmyl,
+        CONCAT(ifnull(ROUND(SUM(CASE WHEN khpj=5 THEN 1 ELSE 0 END)/COUNT(a.id),0)*100,0),'%') ztfcmyl,
+        SUM(CASE WHEN khpj=2 THEN 1 ELSE 0 END) bmy,
+        SUM(CASE WHEN khpj IS NULL THEN 1 ELSE 0 END) wpj,
+        COUNT(a.id) zj
+        FROM tthjl a left join tzxlb b on a.zxid=b.zxid where 1=1 and a.thlx='1'
+
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and kssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        <if test="pd.userids != null and pd.userids != ''">
+            <if test="pd.userids.indexOf(',') != -1">
+                and (
+                <foreach item="item" index="index" collection="pd.userids.split(',')">
+                    <if test="index== 0">
+                        find_in_set(${item},a.zxid)
+                    </if>
+                    <if test="index!= 0">
+                        or find_in_set(${item},a.zxid)
+                    </if>
+                </foreach>
+                )
+            </if>
+        </if>
+
+        <if test="pd.way=='zxid'">
+            GROUP BY a.zxid
+        </if>
+        <if test="pd.way=='day' or pd.way=='month' or pd.way=='year' or pd.way=='week'">
+            GROUP BY time
+        </if>
+        ) a where 1=1
+        <if test="pd.keywords!=null and pd.keywords!='' and pd.keywords!='undefined'" >
+            AND (
+            zxxm like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            cpl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            fcmy like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            cpfcmyl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            ztfcmyl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            bmy like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            wpj like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zj like binary CONCAT(CONCAT('%', #{pd.keywords}),'%')
+            )
+        </if>
+	</select>
+
+
+<!--话务统计 	-->
+	<select id="XTHWTJlistPage" resultType="pd" parameterType="page">
+        select * from (
+        SELECT
+        <if test="pd.way=='day'">
+            DATE_FORMAT(a.kssj,'%d') as time,
+        </if>
+        <if test="pd.way=='month'">
+            DATE_FORMAT(a.kssj,'%m') as time,
+        </if>
+        <if test="pd.way=='year'">
+            DATE_FORMAT(a.kssj,'%Y') as time,
+        </if>
+        <if test="pd.way=='week'">
+            DATE_FORMAT(a.kssj,'%u') as time,
+        </if>
+        SUM(CASE WHEN a.thfx='0' THEN 1 ELSE 0 END) hrzj, -- 呼入总计(次)
+        SUM(CASE WHEN a.thfx='0' AND a.sfzrg='1' THEN 1 ELSE 0 END) rghrzj, -- 人工呼入总计(次)
+        SUM(CASE WHEN b.czjg='失败' AND a.sfzrg='1' and b.id is not null  THEN 1 ELSE 0 END) fql, -- 放弃量(次)
+        SUM(CASE WHEN c.id IS NOT NULL AND a.sfzrg='1' THEN 1 ELSE 0 END) jtl, -- 接通量(次)
+        SUM(CASE WHEN c.id IS NOT NULL AND a.sfzrg='1' AND a.fqsj&lt;=15 THEN 1 ELSE 0 END) fifteenjtl,-- 15秒接通量(次)
+        SUM(CASE WHEN b.czjg='失败' AND a.sfzrg='1' AND a.fqsj&lt;=10  THEN 1 ELSE 0 END) tenfql,  -- 10秒放弃量(次)
+        IFNULL(ROUND(SUM(CASE WHEN a.sfzrg='1' THEN 1 ELSE 0 END)/(SELECT COUNT(id) FROM tzxlb),0),0) rjhwcl,-- 人均话务处理(次)
+        SUM(CASE WHEN a.pdsj IS NOT NULL THEN a.pdsj ELSE 0 END ) pdsc, -- 排队时长(秒)
+        SUM(CASE WHEN a.pdsj!=0 THEN 1 ELSE 0 END ) pdl,-- 排队量
+        SUM(CASE WHEN c.ddsj IS NOT NULL THEN c.ddsj ELSE 0 END) zlsc,-- 振铃时长(秒)
+        SUM(CASE WHEN c.ddsj!=0 THEN 1 ELSE 0 END) zll, -- 振铃量
+        SUM(CASE WHEN c.thsj IS NOT NULL THEN c.thsj ELSE 0 END) thsc, -- 通话时长(秒)
+        SUM(CASE WHEN c.shclsj IS NOT NULL THEN c.shclsj ELSE 0 END) shclsj,-- 事后时间(秒)
+        CONCAT(IFNULL(ROUND(SUM(CASE WHEN a.thfx='0' AND a.sfzrg='1' THEN 1 ELSE 0 END)/SUM(CASE WHEN a.thfx='0' THEN 1 ELSE 0 END),0),0)*100,'%') rghjzb,-- 人工呼入占比(%)
+        CONCAT(IFNULL(ROUND(SUM(CASE WHEN b.czjg='失败' AND a.sfzrg='1'  THEN 1 ELSE 0 END)/SUM(CASE WHEN a.thfx='0' AND a.sfzrg='1' THEN 1 ELSE 0 END),0),0)*100,'%') fqhjzb, -- 放弃率(%)
+        CONCAT(IFNULL(ROUND(SUM(CASE WHEN c.id IS NOT NULL AND a.sfzrg='1' THEN 1 ELSE 0 END)/SUM(CASE WHEN a.thfx='0' AND a.sfzrg='1' THEN 1 ELSE 0 END),0),0)*100,'%') jtzb,-- 接通率(%)
+        CONCAT(IFNULL(ROUND(SUM(CASE WHEN c.id IS NOT NULL AND a.sfzrg='1' AND a.fqsj&lt;=15 THEN 1 ELSE 0 END)/SUM(CASE WHEN a.thfx='0' AND a.sfzrg='1' THEN 1 ELSE 0 END),0),0)*100,'%') fifteenjtzb,-- 服务水平15秒(%)
+        IFNULL(ROUND(SUM(CASE WHEN a.pdsj IS NOT NULL THEN a.pdsj ELSE 0 END )/SUM(CASE WHEN a.pdsj!=0 THEN 1 ELSE 0 END ),0),0) pjpdsc,-- 平均排队时长(秒)
+        IFNULL(ROUND(SUM(CASE WHEN c.ddsj IS NOT NULL THEN c.ddsj ELSE 0 END)/SUM(CASE WHEN c.ddsj!=0 THEN 1 ELSE 0 END),0),0) pjzlsc, -- 平均振铃时长(秒)
+        IFNULL(ROUND(SUM(CASE WHEN c.thsj IS NOT NULL THEN c.thsj ELSE 0 END)/SUM(CASE WHEN c.id IS NOT NULL THEN 1 ELSE 0 END),0),0) pjthsc,-- 平均通话时长(秒)
+        IFNULL(ROUND(SUM(CASE WHEN c.shclsj IS NOT NULL THEN c.shclsj ELSE 0 END)/SUM(CASE WHEN c.id IS NOT NULL AND a.sfzrg='1' THEN 1 ELSE 0 END),0),0) pjshclsc,-- 平均事后时间(秒)
+        IFNULL(ROUND(SUM(CASE WHEN a.thsj IS NOT NULL THEN a.thsj ELSE 0 END)/SUM(CASE WHEN a.thfx='0' THEN 1 ELSE 0 END),0),0) pjhwsc,-- 平均话务时间(秒)
+        ifnull((select sum(e.ljsj) from tzxczrz e where czxm='1'
+        <if test="pd.way=='day'">
+            and DAY(e.fssj)=DAY(a.kssj) group by DAY(e.fssj)
+        </if>
+        <if test="pd.way=='month'">
+            and MONTH(e.fssj)=MONTH(a.kssj) group by MONTH(e.fssj)
+        </if>
+        <if test="pd.way=='year'">
+            and YEAR(e.fssj)=YEAR(a.kssj) group by YEAR(e.fssj)
+        </if>
+        <if test="pd.way=='week'">
+            and WEEK(e.fssj)=WEEK(a.kssj) group by WEEK(e.fssj)
+        </if>
+        ),0) zxdlsc
+        FROM thwrz a
+        LEFT JOIN tivropt b ON a.hwlsh=b.hwlsh
+        LEFT JOIN tthjl c ON a.hwlsh=c.hwlsh
+        where 1=1 and c.thlx='1'
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.kssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+		GROUP BY time
+        ) a where 1=1
+
+		<if test="pd.keywords!=null and pd.keywords!='' and pd.keywords!='undefined'" >
+            AND (
+            hrzj like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            rghrzj like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            fql like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            jtl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            fifteenjtl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            tenfql like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            rjhwcl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            pdsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            pdl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zlsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zll like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            shclsj like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            rghjzb like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            fqhjzb like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            jtzb like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            fifteenjtzb like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            pjpdsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            pjzlsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            pjthsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            pjshclsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            pjhwsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            zxdlsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%')
+            )
+        </if>
+<!--		<if test="pd.userids != null and pd.userids != ''">-->
+<!--			<if test="pd.userids.indexOf(',') != -1">-->
+<!--				and (-->
+<!--				<foreach item="item" index="index" collection="pd.userids.split(',')">-->
+<!--					<if test="index== 0">-->
+<!--						find_in_set(${item},c.zxid)-->
+<!--					</if>-->
+<!--					<if test="index!= 0">-->
+<!--						or find_in_set(${item},c.zxid)-->
+<!--					</if>-->
+<!--				</foreach>-->
+<!--				)-->
+<!--			</if>-->
+<!--		</if>-->
+
+	</select>
+	<!--时段话务统计 -->
+	<select id="TimeTelStatlistPage" resultType="pd" parameterType="Page">
+
+		SELECT
+		  COUNT(a.id) num,
+		  CONCAT(DATE_FORMAT( CONCAT(DATE(a.kssj),' ',HOUR(a.kssj),':',00) ,'%H:%i'),'-',DATE_FORMAT( CONCAT(DATE(a.kssj),' ',HOUR(a.kssj),':',59) ,'%H:%i')) AS dataTime,
+		  COUNT(b.id) hrzl,
+		  COUNT(c.id) hczl,
+		  COUNT(d.id) zrgl,
+		  COUNT(e.hwlsh) jtl,
+		  COUNT(f.hwlsh) fql,
+		  CONCAT(IFNULL(CAST(COUNT(e.hwlsh)/COUNT(b.id) AS DECIMAL(4,2)),0)*100 ,'%') hrjtbfb,
+		  COUNT(g.id) hcjtl,
+		  CONCAT(IFNULL(CAST(COUNT(g.id)/COUNT(c.id) AS DECIMAL(4,2)),0)*100 ,'%') hcjtbfb
+		FROM
+		  thwrz a
+		  LEFT JOIN (SELECT * FROM thwrz WHERE thfx='0') b ON a.id=b.id
+		  LEFT JOIN (SELECT * FROM thwrz WHERE thfx='1') c ON a.id=c.id
+		   LEFT JOIN (SELECT * FROM thwrz WHERE sfzrg='1') d ON a.id=d.id
+		   LEFT JOIN (SELECT b.* FROM tthjl a,thwrz b WHERE b.thfx='0' AND a.hwlsh=b.hwlsh) e ON a.hwlsh=e.hwlsh
+		   LEFT JOIN (SELECT b.* FROM tivropt a,thwrz b WHERE b.thfx='0' AND a.hwlsh=b.hwlsh) f ON a.hwlsh=f.hwlsh
+		   LEFT JOIN (SELECT b.* FROM tthjl a,thwrz b WHERE b.thfx='1' AND a.hwlsh=b.hwlsh) g ON a.hwlsh=g.hwlsh
+		WHERE UNIX_TIMESTAMP(a.kssj) BETWEEN UNIX_TIMESTAMP(
+			STR_TO_DATE(
+			  DATE_FORMAT(#{pd.starttime}, '%Y-%m-%d'),
+			  '%Y-%m-%d %H:%i:%s'
+			)
+		  )
+		  AND UNIX_TIMESTAMP(
+			DATE_ADD(
+			  DATE_ADD(
+				STR_TO_DATE(
+				  DATE_FORMAT(#{pd.endtime}, '%Y-%m-%d'),
+				  '%Y-%m-%d %H:%i:%s'
+				),
+				INTERVAL 1 DAY
+			  ),
+			  INTERVAL - 1 SECOND
+			)
+		  )
+		GROUP BY DATE_FORMAT(a.kssj, '%H')
+
+	</select>
+
+<!--	工作量统计 通话方向0呼入、1呼出-->
+	<select id="getzxhwtjlistPage" resultType="pd" parameterType="Page">
+        select * from (
+        SELECT c.zxid,d.zxxm as name,
+        SUM(CASE WHEN c.thfx='0' AND c.id IS NOT NULL THEN 1 ELSE 0 END) hrl,-- 呼入量
+        SUM(CASE WHEN tz.id IS NOT NULL AND c.thfx='0' THEN 1 ELSE 0 END )yds,-- 应答数
+        CONCAT(IFNULL(ROUND(SUM(CASE WHEN tz.id IS NOT NULL AND c.thfx='0' THEN 1 ELSE 0 END )/SUM(CASE WHEN c.thfx='0' AND c.id IS NOT NULL THEN 1 ELSE 0 END),0),0)*100,'%')ydl, -- 应答率
+        SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='0' AND c.ddsj&gt;5 THEN 1 ELSE 0 END) csyds,-- 超时应答数
+--         CONCAT(IFNULL(ROUND(SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='0' AND c.ddsj&lt;5 THEN 1 ELSE 0 END)/SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='1' THEN 1 ELSE 0 END ),0),0)*100,'%') jsydl,-- 应答及时率
+        CONCAT(IFNULL(ROUND((SUM(CASE WHEN tz.id IS NOT NULL AND c.thfx='0' THEN 1 ELSE 0 END )-SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='0' AND c.ddsj&gt;5 THEN 1 ELSE 0 END))
+        /SUM(CASE WHEN tz.id IS NOT NULL AND c.thfx='0' THEN 1 ELSE 0 END ),0),0)*100,'%') jsydl,-- 应答及时率
+        CONCAT(ROUND(SUM(CASE WHEN c.id IS NOT NULL  THEN c.thsj ELSE 0 END)/60,0),'分') thzsc,-- 通话总时长
+        CONCAT(ROUND(SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='0' THEN c.thsj ELSE 0 END)/60,0),'分') hrzsc, -- 呼入通话时长
+        CONCAT(IFNULL(ROUND(SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='0' THEN c.thsj ELSE 0 END)/SUM(CASE WHEN c.thfx='0' AND c.id IS NOT NULL THEN 1 ELSE 0 END),0),0),'秒') hrpjsc,-- 呼入平均通话时长
+--         SUM(CASE WHEN  c.bcsj&gt;0 then 1 ELSE 0 END) bccs,-- 保持次数
+--         SUM(CASE WHEN  c.bcsj&gt;0 then c.bcsj ELSE 0 END)bcsc,-- 保持时长
+        CONCAT(ROUND(SUM(CASE WHEN c.id IS NOT NULL THEN c.fwsj+c.ddsj+c.bcsj+c.shclsj ELSE 0 END)/60,0) ,'分')gzsc,-- 工作时长
+        CONCAT(ROUND(SUM(CASE WHEN c.id IS NOT NULL THEN c.fwsj+c.shclsj ELSE 0 END)/60,0),'分') gzztsc,-- 工作状态时长
+        CONCAT(IFNULL(ROUND(SUM(CASE WHEN c.id IS NOT NULL THEN c.fwsj+c.shclsj ELSE 0 END)/SUM(CASE WHEN c.id IS NOT NULL THEN c.fwsj+c.ddsj+c.bcsj+c.shclsj ELSE 0 END),0),0)*100,'%') gslyl,-- 工时利用率
+        SUM(CASE WHEN c.thfx='1' THEN 1 ELSE 0 END) hccs,-- 呼出次数
+        SUM(CASE WHEN tz.id IS NOT NULL AND tz.thfx='1' THEN 1 ELSE 0 END) hccgcs,-- 呼出成功次数
+        CONCAT(IFNULL(ROUND(SUM(CASE WHEN tz.id IS NOT NULL AND c.thfx='1' THEN 1 ELSE 0 END)/SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='1' THEN 1 ELSE 0 END),0),0)*100,'%')hccgl,-- 呼出成功率
+        CONCAT(ROUND(SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='1' THEN c.thsj ELSE 0 END)/60,0),'分') hcthsc,-- 呼出通话时长
+        IFNULL(ROUND(SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='1' THEN c.thsj ELSE 0 END)/SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='1' THEN 1 ELSE 0 END),0),0) hcpjthsc, -- 呼出平均通话时长
+        IFNULL(ROUND(MAX(c.thsj)/60,0),0) zdhcthsc,-- 最大通话时长
+        SUM(CASE WHEN c.khpj THEN c.khpj ELSE 0 end) myd,
+        ifnull(ROUND((select sum(ljsj) from tzxczrz a where czxm='7' and a.zx=d.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.fssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        )/60,0),0) bcsc,-- 保持时长
+        ifnull((select count(id) from tzxczrz a where czxm='7' and a.zx=d.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.fssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        ),0) bccs, -- 保持次数
+        CONCAT(ifnull(ROUND((select sum(ljsj) from tzxczrz a where czxm='4' and a.zx=d.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.fssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        )/60,0),0),'分') smsc,-- 示忙时长
+        ifnull((select count(id) from tzxczrz a where czxm='4' and a.zx=d.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.fssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        ),0) smcs, -- 示忙次数
+        CONCAT(ifnull(ROUND((select ROUND(sum(ljsj)/60,0) from tzxczrz a where czxm='4' and a.zx=d.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.fssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        )/60,0),0),'分') kxsc, -- 空闲时间
+        ifnull((select count(id) from tzxczrz a where czxm='11' and a.zx=d.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.fssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        ),0) hjzycs, -- 呼叫转移数
+        ifnull((select count(id) from tzxczrz a where czxm='1' and a.zx=d.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.fssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        ),0) dlcs -- 登录次数
+
+        from  tthjl c
+        left join tthjl_zxjtls tz on c.id = tz.thjl_id
+        left join tzxlb d on c.zxid=d.zxid
+        where 1=1 and c.thlx='1'  and d.zxxm is not null
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and c.kssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        <if test="pd.userids != null and pd.userids != ''">
+            <if test="pd.userids.indexOf(',') != -1">
+                and (
+                <foreach item="item" index="index" collection="pd.userids.split(',')">
+                    <if test="index== 0">
+                        find_in_set(${item},d.zxid)
+                    </if>
+                    <if test="index!= 0">
+                        or find_in_set(${item},d.zxid)
+                    </if>
+                </foreach>
+                )
+            </if>
+        </if>
+        <if test="pd.name != null and pd.name != ''">
+            and d.zxxm=#{pd.name}
+        </if>
+        GROUP BY d.zxid
+        ) a where 1=1
+
+     <if test="pd.keywords!=null and pd.keywords!='' and pd.keywords!='undefined'" >
+         AND (
+         name like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         zxid like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         hrl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         yds like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         ydl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         csyds like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         jsydl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         thzsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         hrzsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         hrpjsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         bccs like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         bcsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         gzsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         gzztsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         gslyl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         hccs like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         hccgcs like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         hccgl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         hcthsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         hcpjthsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         zdhcthsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         myd like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         smsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         smcs like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         kxsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         hjzycs like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+         dlcs like binary CONCAT(CONCAT('%', #{pd.keywords}),'%')
+         )
+     </if>
+
+	</select>
+
+	<select id="getzxhwtj" resultType="pd" parameterType="pd">
+        select * from (
+        SELECT c.zxid,d.zxxm as name,
+        SUM(CASE WHEN c.thfx='0' AND c.id IS NOT NULL THEN 1 ELSE 0 END) hrl,-- 呼入量
+        SUM(CASE WHEN tz.id IS NOT NULL AND c.thfx='0' THEN 1 ELSE 0 END )yds,-- 应答数
+        CONCAT(IFNULL(ROUND(SUM(CASE WHEN tz.id IS NOT NULL AND c.thfx='0' THEN 1 ELSE 0 END )/SUM(CASE WHEN c.thfx='0' AND c.id IS NOT NULL THEN 1 ELSE 0 END),0),0)*100,'%')ydl, -- 应答率
+        SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='0' AND c.ddsj&gt;5 THEN 1 ELSE 0 END) csyds,-- 超时应答数
+        CONCAT(IFNULL(ROUND((SUM(CASE WHEN tz.id IS NOT NULL AND c.thfx='0' THEN 1 ELSE 0 END )-SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='0' AND c.ddsj&gt;5 THEN 1 ELSE 0 END))
+        /SUM(CASE WHEN tz.id IS NOT NULL AND c.thfx='0' THEN 1 ELSE 0 END ),0),0)*100,'%') jsydl,-- 应答及时率
+        CONCAT(ROUND(SUM(CASE WHEN c.id IS NOT NULL  THEN c.thsj ELSE 0 END)/60,0),'分') thzsc,-- 通话总时长
+        CONCAT(ROUND(SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='0' THEN c.thsj ELSE 0 END)/60,0),'分') hrzsc, -- 呼入通话时长
+        CONCAT(IFNULL(ROUND(SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='0' THEN c.thsj ELSE 0 END)/SUM(CASE WHEN c.thfx='0' AND c.id IS NOT NULL THEN 1 ELSE 0 END),0),0),'秒') hrpjsc,-- 呼入平均通话时长
+--         SUM(CASE WHEN  c.bcsj&gt;0 then 1 ELSE 0 END) bccs,-- 保持次数
+--         SUM(CASE WHEN  c.bcsj&gt;0 then c.bcsj ELSE 0 END)bcsc,-- 保持时长
+        CONCAT(ROUND(SUM(CASE WHEN c.id IS NOT NULL THEN c.fwsj+c.ddsj+c.bcsj+c.shclsj ELSE 0 END)/60,0) ,'分')gzsc,-- 工作时长
+        CONCAT(ROUND(SUM(CASE WHEN c.id IS NOT NULL THEN c.fwsj+c.shclsj ELSE 0 END)/60,0),'分') gzztsc,-- 工作状态时长
+        CONCAT(IFNULL(ROUND(SUM(CASE WHEN c.id IS NOT NULL THEN c.fwsj+c.shclsj ELSE 0 END)/SUM(CASE WHEN c.id IS NOT NULL THEN c.fwsj+c.ddsj+c.bcsj+c.shclsj ELSE 0 END),0),0)*100,'%') gslyl,-- 工时利用率
+        SUM(CASE WHEN c.thfx='1' THEN 1 ELSE 0 END) hccs,-- 呼出次数
+        SUM(CASE WHEN tz.id IS NOT NULL AND tz.thfx='1' THEN 1 ELSE 0 END) hccgcs,-- 呼出成功次数
+        CONCAT(IFNULL(ROUND(SUM(CASE WHEN tz.id IS NOT NULL AND c.thfx='1' THEN 1 ELSE 0 END)/SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='1' THEN 1 ELSE 0 END),0),0)*100,'%')hccgl,-- 呼出成功率
+        CONCAT(ROUND(SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='1' THEN c.thsj ELSE 0 END)/60,0),'分') hcthsc,-- 呼出通话时长
+        IFNULL(ROUND(SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='1' THEN c.thsj ELSE 0 END)/SUM(CASE WHEN c.id IS NOT NULL AND c.thfx='1' THEN 1 ELSE 0 END),0),0) hcpjthsc, -- 呼出平均通话时长
+        IFNULL(ROUND(MAX(c.thsj)/60,0),0) zdhcthsc,-- 最大通话时长
+        SUM(CASE WHEN c.khpj THEN c.khpj ELSE 0 end) myd,
+        ifnull(ROUND((select sum(ljsj) from tzxczrz a where czxm='7' and a.zx=d.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.fssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        )/60,0),0) bcsc,-- 保持时长
+        ifnull((select count(id) from tzxczrz a where czxm='7' and a.zx=d.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.fssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        ),0) bccs, -- 保持次数
+        CONCAT(ifnull(ROUND((select sum(ljsj) from tzxczrz a where czxm='4' and a.zx=d.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.fssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        )/60,0),0),'分') smsc,-- 示忙时长
+        ifnull((select count(id) from tzxczrz a where czxm='4' and a.zx=d.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.fssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        ),0) smcs, -- 示忙次数
+        CONCAT(ifnull(ROUND((select ROUND(sum(ljsj)/60,0) from tzxczrz a where czxm='4' and a.zx=d.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.fssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        )/60,0),0),'分') kxsc, -- 空闲时间
+        ifnull((select count(id) from tzxczrz a where czxm='11' and a.zx=d.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.fssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        ),0) hjzycs, -- 呼叫转移数
+        ifnull((select count(id) from tzxczrz a where czxm='1' and a.zx=d.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and a.fssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        ),0) dlcs -- 登录次数
+
+        from  tthjl c
+        left join tthjl_zxjtls tz on c.id = tz.thjl_id
+        left join tzxlb d on c.zxid=d.zxid
+        where 1=1 and c.thlx='1' and d.zxxm is not null
+        <if test="starttime != null and starttime != '' and endtime != null and endtime != ''">
+            and c.kssj between #{starttime} and #{endtime}
+        </if>
+        <if test="userids != null and userids != ''">
+            <if test="userids.indexOf(',') != -1">
+                and (
+                <foreach item="item" index="index" collection="userids.split(',')">
+                    <if test="index== 0">
+                        find_in_set(${item},d.zxid)
+                    </if>
+                    <if test="index!= 0">
+                        or find_in_set(${item},d.zxid)
+                    </if>
+                </foreach>
+                )
+            </if>
+        </if>
+        <if test="name != null and name != ''">
+            and d.zxxm=#{name}
+        </if>
+        GROUP BY d.zxid
+        ) a where 1=1
+        <if test="keywords!=null and keywords!='' and keywords!='undefined'" >
+            AND (
+            name like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            zxid like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            hrl like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            yds like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            ydl like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            csyds like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            jsydl like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            thzsc like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            hrzsc like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            hrpjsc like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            bccs like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            bcsc like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            gzsc like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            gzztsc like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            gslyl like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            hccs like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            hccgcs like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            hccgl like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            hcthsc like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            hcpjthsc like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            zdhcthsc like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            myd like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            smsc like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            smcs like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            kxsc like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            hjzycs like binary CONCAT(CONCAT('%', #{keywords}),'%') OR
+            dlcs like binary CONCAT(CONCAT('%', #{keywords}),'%')
+            )
+        </if>
+
+	</select>
+
+<!--在线客服统计-->
+	<select id="zxkflistPage" resultType="pd" parameterType="Page">
+        select * from (
+        select a.zxid,a.zxxm as name,
+        CONCAT(ROUND(ifnull((select sum(thsj) from tthjl b where b.zxid=a.zxid and thlx='2'
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and b.kssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        group by a.zxid)/60,0),0),'分') fwsc,
+        ifnull((select count(id) from tthjl b where b.zxid=a.zxid and thlx='2'
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and b.kssj between #{pd.starttime} and #{pd.endtime}
+        </if>
+        group by a.zxid),0) fwl,
+        ifnull((select sum(start) from t_evaluate b where b.zxid=a.zxid
+        <if test="pd.starttime != null and pd.starttime != '' and pd.endtime != null and pd.endtime != ''">
+            and b.time between #{pd.starttime} and #{pd.endtime}
+        </if>
+        group by b.zxid),0) myd
+        from tzxlb a where 1=1
+        <if test="pd.userids != null and pd.userids != ''">
+            <if test="pd.userids.indexOf(',') != -1">
+                and (
+                <foreach item="item" index="index" collection="pd.userids.split(',')">
+                    <if test="index== 0">
+                        find_in_set(${item},a.zxid)
+                    </if>
+                    <if test="index!= 0">
+                        or find_in_set(${item},a.zxid)
+                    </if>
+                </foreach>
+                )
+            </if>
+        </if>
+		group by a.zxid
+        ) a where 1=1
+
+        <if test="pd.keywords!=null and pd.keywords!='' and pd.keywords!='undefined'" >
+            AND (
+            zxid like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            name like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            fwsc like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            fwl like binary CONCAT(CONCAT('%', #{pd.keywords}),'%') OR
+            myd like binary CONCAT(CONCAT('%', #{pd.keywords}),'%')
+            )
+        </if>
+
+	</select>
+
+	<select id="getUserByZxz" resultType="pd" parameterType="pd">
+		SELECT * from tzxlb WHERE zxz=#{zxz} and dept like binary CONCAT(CONCAT((SELECT dept from tzxlb where zxid=#{id}),'%'))
+	</select>
+
+	<select id="HomeService" parameterType="pd" resultType="pd">
+		select count(id) as `value` ,'来电坐席服务量' as `name` from tthjl where to_days(kssj) = to_days(now()) and thlx='1'
+		union
+		select count(id) as `value` ,'视频坐席服务量' as `name` from tthjl where to_days(kssj) = to_days(now()) and thlx='3'
+		union
+		select count(id) as `value` ,'在线坐席服务量' as `name` from tthjl where to_days(kssj) = to_days(now()) and thlx='2'
+	</select>
+
+	<select id="StateChange" resultType="pd">
+
+			SELECT note, SUM(ljsj) ljsj,COUNT(czxm) COUNT FROM `tzxczrz` WHERE  rq = CURDATE() GROUP BY czxm
+
+	</select>
+
+</mapper>
